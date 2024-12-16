@@ -1,0 +1,75 @@
+Objectif :
+Créer une réplique complète et fonctionnelle du site SeLoger, incluant toutes ses sous-pages et fonctionnalités interactives, avec l'ajout d'une application pour une agence immobilière. Cette application devra inclure un chatbot intelligent capable de répondre aux questions des clients en s’appuyant sur les informations extraites automatiquement des fichiers PDF fournis par l'agence.
+
+Rôle :
+Adoptez le rôle d’un développeur web et ingénieur IA, expert en intégration avancée, extraction de données et création de chatbots intelligents, en utilisant des outils modernes pour automatiser, analyser et reconstruire des systèmes complexes.
+
+Contexte :
+Le projet inclut :
+
+Clonage complet du site SeLoger, avec toutes ses pages, fonctionnalités interactives et styles.
+Application d'agence immobilière permettant :
+Le téléchargement de fichiers PDF (contrats, détails des propriétés, conditions de location, etc.).
+L’extraction automatique des données clés de ces fichiers pour les rendre accessibles et exploitables.
+L’intégration d’un chatbot intelligent capable de répondre à des requêtes complexes comme :
+"Quels sont les détails de l'appartement au 15 rue de la Paix ?"
+"Quelles sont les conditions de location pour cet appartement ?"
+Une gestion fluide des annonces immobilières et des documents PDF par l’agence.
+Étapes détaillées (ASPECCT) :
+1. Analyse :
+Technologies du site source : Identifier les technologies front-end (HTML5, CSS3, JavaScript) et back-end utilisées par SeLoger.
+Architecture : Cartographier les pages et fonctionnalités interactives (filtres, carte interactive, formulaires).
+Données PDF : Analyser les besoins pour l’extraction des données des fichiers PDF, y compris les métadonnées et les contenus textuels.
+2. Extraction des données :
+Clonage du site :
+Utiliser des outils comme Puppeteer, Selenium, ou Beautiful Soup pour copier les contenus (HTML, CSS, JS).
+Télécharger les ressources statiques (images, icônes, fichiers CSS et JS).
+Recueillir les interactions utilisateur et dynamiques.
+Extraction des PDF :
+Utiliser des bibliothèques comme PyPDF2, PDFPlumber ou Tika pour extraire automatiquement les données des fichiers PDF fournis par l’agence.
+Structurer les données clés (ex. : adresse, prix, conditions de location) pour les rendre exploitables par le chatbot.
+3. Développement :
+Reproduction du site :
+Recréer le site avec une structure modulaire (HTML5, CSS3, JavaScript).
+Implémenter les fonctionnalités interactives (filtres, cartes interactives, formulaires).
+Intégration de l'application pour l'agence :
+Créer une interface utilisateur permettant :
+Le téléchargement des fichiers PDF par l’agence.
+La visualisation et la modification des données extraites.
+Développer un backend robuste pour gérer l'extraction et le stockage des données clés.
+Chatbot intelligent :
+Intégrer un modèle IA (ex. GPT ou similaire) capable d’analyser les données extraites des PDF et de répondre aux questions des clients.
+Entraîner le modèle à comprendre des requêtes contextuelles en liant les informations aux fichiers PDF.
+Assurer une réponse rapide et précise en utilisant des APIs de recherche ou de stockage de données (ex. Elasticsearch).
+4. Tests et ajustements :
+Clonage :
+Vérifier la fidélité du rendu des pages et fonctionnalités clonées par rapport au site original.
+Chatbot et PDF :
+Tester la précision des réponses du chatbot sur des cas d'usage réels.
+Simuler diverses requêtes client pour évaluer la performance de l’extraction et la pertinence des réponses.
+Compatibilité :
+Tester la responsivité du site et de l'application sur différents navigateurs et appareils.
+5. Optimisation :
+Performance :
+Optimiser les temps de chargement des pages et des fonctionnalités interactives.
+Réduire le poids des données extraites et les rendre accessibles rapidement.
+Sécurité :
+Implémenter des mesures de sécurité pour protéger les fichiers PDF téléchargés et les données sensibles.
+6. Livraison :
+Fournir une version complète et fonctionnelle du site cloné et de l’application intégrée.
+Documenter :
+Les outils et frameworks utilisés.
+Les étapes pour la maintenance et l’évolution de l’application.
+Contraintes :
+Légalité :
+Le clonage et l'intégration doivent respecter les lois sur la propriété intellectuelle et la vie privée.
+L’utilisation des données des PDF doit être limitée à des fins autorisées par l’agence.
+Technologie :
+Utiliser des outils modernes pour la gestion des fichiers PDF et la génération de réponses contextuelles.
+Assurer la compatibilité avec les technologies couramment utilisées pour les sites web modernes.
+Résultats attendus :
+Clonage complet du site SeLoger, avec navigation fluide et toutes les fonctionnalités.
+Une application intégrée permettant à une agence immobilière de :
+Gérer facilement ses annonces et documents.
+Fournir un chatbot capable de répondre précisément aux questions clients grâce aux données des PDF.
+Un projet documenté, maintenable et évolutif.
