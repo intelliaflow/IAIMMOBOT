@@ -11,8 +11,11 @@ interface Property {
   bathrooms: number;
   area: number;
   type: string;
-  features: string[];
-  images: string[];
+  transactionType: string;
+  features: string[] | null;
+  images: string[] | null;
+  agencyId: number | null;
+  createdAt: Date | null;
 }
 
 interface PropertiesListProps {
@@ -21,7 +24,14 @@ interface PropertiesListProps {
 
 export function PropertiesList({ transactionType }: PropertiesListProps) {
   const { data: properties, isLoading, error } = useQuery<Property[]>({
-    queryKey: [`/api/properties/${transactionType}`],
+    queryKey: [`/api/properties`],
+    queryFn: async () => {
+      const response = await fetch(`/api/properties/${transactionType}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch properties');
+      }
+      return response.json();
+    }
   });
 
   if (isLoading) {
