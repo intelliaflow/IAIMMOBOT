@@ -21,6 +21,7 @@ export const properties = pgTable("properties", {
   bathrooms: integer("bathrooms").notNull(),
   area: integer("area").notNull(),
   type: text("type").notNull(),
+  transactionType: text("transaction_type").notNull().default("sale"),
   features: jsonb("features").$type<string[]>(),
   images: jsonb("images").$type<string[]>(),
   agencyId: integer("agency_id").references(() => users.id),

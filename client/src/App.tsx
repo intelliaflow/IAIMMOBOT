@@ -2,6 +2,8 @@ import { Switch, Route } from "wouter";
 import { Home } from "./pages/Home";
 import { PropertyDetail } from "./pages/PropertyDetail";
 import { AgencyDashboard } from "./pages/AgencyDashboard";
+import { SaleProperties } from "./pages/SaleProperties";
+import { RentProperties } from "./pages/RentProperties";
 import { NavBar } from "./components/NavBar";
 import { AlertCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,6 +14,8 @@ function App() {
       <NavBar />
       <Switch>
         <Route path="/" component={Home} />
+        <Route path="/properties/sale" component={SaleProperties} />
+        <Route path="/properties/rent" component={RentProperties} />
         <Route path="/property/:id" component={PropertyDetail} />
         <Route path="/agency/dashboard" component={AgencyDashboard} />
         <Route component={NotFound} />
