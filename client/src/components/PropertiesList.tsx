@@ -1,5 +1,6 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { PropertyCard } from "@/components/PropertyCard";
+import type { SearchParams } from "@/components/SearchFilters";
 
 interface Property {
   id: number;
@@ -23,15 +24,30 @@ interface PropertiesListProps {
 }
 
 export function PropertiesList({ transactionType }: PropertiesListProps) {
+  const queryClient = useQueryClient();
+  const searchParams = queryClient.getQueryData<SearchParams>(['searchParams']);
+
   const { data: properties, isLoading, error } = useQuery<Property[]>({
-    queryKey: [`/api/properties/transaction/${transactionType}`],
+    queryKey: [`/api/properties/transaction/${transactionType}`, searchParams],
     queryFn: async () => {
-      console.log(`Fetching properties for transaction type: ${transactionType}`);
-      const response = await fetch(`/api/properties/transaction/${transactionType}`);
+      const params = new URLSearchParams();
+      if (searchParams?.location) params.append('location', searchParams.location);
+      if (searchParams?.propertyType) params.append('type', searchParams.propertyType);
+      if (searchParams?.rooms) params.append('rooms', searchParams.rooms);
+      if (searchParams?.minPrice) params.append('minPrice', searchParams.minPrice.toString());
+      if (searchParams?.maxPrice) params.append('maxPrice', searchParams.maxPrice.toString());
+
+      const queryString = params.toString();
+      const url = `/api/properties/transaction/${transactionType}${queryString ? `?${queryString}` : ''}`;
+      
+      console.log(`Fetching properties with URL: ${url}`);
+      const response = await fetch(url);
+      
       if (!response.ok) {
         console.error('Failed to fetch properties:', response.status, response.statusText);
         throw new Error('Failed to fetch properties');
       }
+      
       const data = await response.json();
       console.log(`Received properties:`, data);
       return data;

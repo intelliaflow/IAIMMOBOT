@@ -3,18 +3,62 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
+import { useQueryClient } from "@tanstack/react-query";
 
-export function SearchFilters() {
+interface SearchFiltersProps {
+  transactionType?: 'sale' | 'rent';
+}
+
+export interface SearchParams {
+  location?: string;
+  propertyType?: string;
+  rooms?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  transactionType?: 'sale' | 'rent';
+}
+
+export function SearchFilters({ transactionType }: SearchFiltersProps) {
+  const queryClient = useQueryClient();
+  const [location, setLocation] = useState("");
+  const [propertyType, setPropertyType] = useState<string>();
+  const [rooms, setRooms] = useState<string>();
   const [priceRange, setPriceRange] = useState([0, 1000000]);
+
+  const handleSearch = () => {
+    const searchParams: SearchParams = {
+      location: location || undefined,
+      propertyType,
+      rooms,
+      minPrice: priceRange[0],
+      maxPrice: priceRange[1],
+      transactionType
+    };
+
+    // Invalidate and refetch with new search params
+    queryClient.invalidateQueries({
+      queryKey: transactionType 
+        ? [`/api/properties/transaction/${transactionType}`] 
+        : ['/api/properties'],
+      refetchType: 'active'
+    });
+
+    // Store search params in query client state
+    queryClient.setQueryData(['searchParams'], searchParams);
+  };
 
   return (
     <div className="bg-white p-4 rounded-lg shadow">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div>
-          <Input placeholder="Où ? Ville, code postal..." />
+          <Input 
+            placeholder="Où ? Ville, code postal..." 
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+          />
         </div>
         <div>
-          <Select>
+          <Select value={propertyType} onValueChange={setPropertyType}>
             <SelectTrigger>
               <SelectValue placeholder="Type de bien" />
             </SelectTrigger>
@@ -26,7 +70,7 @@ export function SearchFilters() {
           </Select>
         </div>
         <div>
-          <Select>
+          <Select value={rooms} onValueChange={setRooms}>
             <SelectTrigger>
               <SelectValue placeholder="Nombre de pièces" />
             </SelectTrigger>
@@ -40,7 +84,9 @@ export function SearchFilters() {
           </Select>
         </div>
         <div>
-          <Button className="w-full">Rechercher</Button>
+          <Button className="w-full" onClick={handleSearch}>
+            Rechercher
+          </Button>
         </div>
       </div>
       <div className="mt-4">

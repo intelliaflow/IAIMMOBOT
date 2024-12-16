@@ -7,10 +7,11 @@ import { eq } from "drizzle-orm";
 export function registerRoutes(app: Express): Server {
   const httpServer = createServer(app);
 
-  // Get properties by transaction type (sale/rent)
+  // Get properties by transaction type (sale/rent) with filters
   app.get("/api/properties/transaction/:type", async (req, res) => {
     try {
       const transactionType = req.params.type;
+      const { location, type: propertyType, rooms, minPrice, maxPrice } = req.query;
       
       // Validate transaction type
       if (transactionType !== 'sale' && transactionType !== 'rent') {
@@ -19,15 +20,41 @@ export function registerRoutes(app: Express): Server {
         });
       }
 
-      console.log(`Fetching properties with transaction type: ${transactionType}`);
-      const filteredProperties = await db
+      console.log(`Fetching properties with filters:`, {
+        transactionType,
+        location,
+        propertyType,
+        rooms,
+        minPrice,
+        maxPrice
+      });
+
+      // Start building the query
+      let query = db
         .select()
         .from(properties)
         .where(eq(properties.transactionType, transactionType));
-      
-      console.log(`Found ${filteredProperties.length} properties`);
 
-      console.log(`Properties fetched (${transactionType}):`, filteredProperties.length);
+      // Add filters
+      if (location) {
+        query = query.where(properties.location, 'ilike', `%${location}%`);
+      }
+      if (propertyType) {
+        query = query.where(eq(properties.type, propertyType as string));
+      }
+      if (rooms) {
+        query = query.where(eq(properties.bedrooms, parseInt(rooms as string)));
+      }
+      if (minPrice) {
+        query = query.where('price', '>=', parseInt(minPrice as string));
+      }
+      if (maxPrice) {
+        query = query.where('price', '<=', parseInt(maxPrice as string));
+      }
+
+      const filteredProperties = await query;
+      
+      console.log(`Found ${filteredProperties.length} properties matching criteria`);
       return res.json(filteredProperties);
     } catch (error) {
       console.error("Error fetching properties:", error);
