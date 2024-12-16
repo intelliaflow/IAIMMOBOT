@@ -9,7 +9,7 @@ export function NavBar() {
         <div className="flex justify-between h-16">
           <div className="flex">
             <Link href="/" className="flex items-center">
-                <span className="text-2xl font-bold text-primary">SeLoger</span>
+                <span className="text-2xl font-bold text-primary">IAImmo</span>
             </Link>
             <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
               <Link href="/" className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900">
