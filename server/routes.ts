@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { db } from "@db";
 import { properties, documents } from "@db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 
 export function registerRoutes(app: Express): Server {
   const httpServer = createServer(app);
@@ -29,30 +29,29 @@ export function registerRoutes(app: Express): Server {
         maxPrice
       });
 
-      // Start building the query
-      let query = db
-        .select()
-        .from(properties)
-        .where(eq(properties.transactionType, transactionType));
-
-      // Add filters
+      // Build conditions array
+      const conditions = [eq(properties.transactionType, transactionType)];
+      
       if (location) {
-        query = query.where(properties.location, 'ilike', `%${location}%`);
+        conditions.push(sql`${properties.location} ILIKE ${`%${location}%`}`);
       }
       if (propertyType) {
-        query = query.where(eq(properties.type, propertyType as string));
+        conditions.push(eq(properties.type, propertyType as string));
       }
       if (rooms) {
-        query = query.where(eq(properties.bedrooms, parseInt(rooms as string)));
+        conditions.push(eq(properties.bedrooms, parseInt(rooms as string)));
       }
       if (minPrice) {
-        query = query.where('price', '>=', parseInt(minPrice as string));
+        conditions.push(sql`${properties.price} >= ${parseInt(minPrice as string)}`);
       }
       if (maxPrice) {
-        query = query.where('price', '<=', parseInt(maxPrice as string));
+        conditions.push(sql`${properties.price} <= ${parseInt(maxPrice as string)}`);
       }
 
-      const filteredProperties = await query;
+      const filteredProperties = await db
+        .select()
+        .from(properties)
+        .where(and(...conditions));
       
       console.log(`Found ${filteredProperties.length} properties matching criteria`);
       return res.json(filteredProperties);

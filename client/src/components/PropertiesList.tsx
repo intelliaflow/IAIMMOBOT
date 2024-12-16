@@ -2,22 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { PropertyCard } from "@/components/PropertyCard";
 import type { SearchParams } from "@/components/SearchFilters";
 
-interface Property {
-  id: number;
-  title: string;
-  description: string;
-  price: number;
-  location: string;
-  bedrooms: number;
-  bathrooms: number;
-  area: number;
-  type: string;
-  transactionType: string;
-  features: string[] | null;
-  images: string[] | null;
-  agencyId: number | null;
-  createdAt: Date | null;
-}
+import type { Property } from "@db/schema";
 
 interface PropertiesListProps {
   transactionType: 'sale' | 'rent';
