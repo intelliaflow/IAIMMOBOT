@@ -10,11 +10,11 @@ export function registerRoutes(app: Express) {
   // Get all properties
   app.get("/api/properties", async (req, res) => {
     try {
-      const allProperties = await db.query.properties.findMany({
-        orderBy: (properties, { desc }) => [desc(properties.createdAt)],
-      });
+      const allProperties = await db.select().from(properties).orderBy(properties.createdAt);
+      console.log("Properties fetched:", allProperties);
       res.json(allProperties);
     } catch (error) {
+      console.error("Error fetching properties:", error);
       res.status(500).json({ message: "Failed to fetch properties" });
     }
   });

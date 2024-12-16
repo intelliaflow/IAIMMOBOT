@@ -8,26 +8,18 @@ export function NavBar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex">
-            <Link href="/">
-              <a className="flex items-center">
+            <Link href="/" className="flex items-center">
                 <span className="text-2xl font-bold text-primary">SeLoger</span>
-              </a>
             </Link>
             <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-              <Link href="/">
-                <a className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900">
-                  Acheter
-                </a>
+              <Link href="/" className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900">
+                Acheter
               </Link>
-              <Link href="/">
-                <a className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-500 hover:text-gray-900">
-                  Louer
-                </a>
+              <Link href="/" className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-500 hover:text-gray-900">
+                Louer
               </Link>
-              <Link href="/agency/dashboard">
-                <a className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-500 hover:text-gray-900">
-                  Agences
-                </a>
+              <Link href="/agency/dashboard" className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-500 hover:text-gray-900">
+                Agences
               </Link>
             </div>
           </div>
