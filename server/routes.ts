@@ -19,11 +19,13 @@ export function registerRoutes(app: Express): Server {
         });
       }
 
+      console.log(`Fetching properties with transaction type: ${transactionType}`);
       const filteredProperties = await db
         .select()
         .from(properties)
-        .where(eq(properties.transactionType, transactionType))
-        .orderBy(properties.createdAt);
+        .where(eq(properties.transactionType, transactionType));
+      
+      console.log(`Found ${filteredProperties.length} properties`);
 
       console.log(`Properties fetched (${transactionType}):`, filteredProperties.length);
       return res.json(filteredProperties);

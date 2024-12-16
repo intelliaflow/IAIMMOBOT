@@ -26,11 +26,15 @@ export function PropertiesList({ transactionType }: PropertiesListProps) {
   const { data: properties, isLoading, error } = useQuery<Property[]>({
     queryKey: [`/api/properties/transaction/${transactionType}`],
     queryFn: async () => {
+      console.log(`Fetching properties for transaction type: ${transactionType}`);
       const response = await fetch(`/api/properties/transaction/${transactionType}`);
       if (!response.ok) {
+        console.error('Failed to fetch properties:', response.status, response.statusText);
         throw new Error('Failed to fetch properties');
       }
-      return response.json();
+      const data = await response.json();
+      console.log(`Received properties:`, data);
+      return data;
     }
   });
 

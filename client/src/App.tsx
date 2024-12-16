@@ -14,8 +14,8 @@ function App() {
       <NavBar />
       <Switch>
         <Route path="/" component={Home} />
-        <Route path="/properties/sale" component={SaleProperties} />
-        <Route path="/properties/rent" component={RentProperties} />
+        <Route path="/acheter" component={SaleProperties} />
+        <Route path="/louer" component={RentProperties} />
         <Route path="/property/:id" component={PropertyDetail} />
         <Route path="/agency/dashboard" component={AgencyDashboard} />
         <Route component={NotFound} />
