@@ -1,4 +1,5 @@
 import { PropertiesList } from "@/components/PropertiesList";
+import { SearchFilters } from "@/components/SearchFilters";
 
 export function RentProperties() {
   return (
