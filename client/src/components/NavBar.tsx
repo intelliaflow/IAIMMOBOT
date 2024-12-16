@@ -12,10 +12,10 @@ export function NavBar() {
                 <span className="text-2xl font-bold text-primary">IAImmo</span>
             </Link>
             <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-              <Link href="/" className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900">
+              <Link href="/acheter" className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-500 hover:text-gray-900">
                 Acheter
               </Link>
-              <Link href="/" className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-500 hover:text-gray-900">
+              <Link href="/louer" className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-500 hover:text-gray-900">
                 Louer
               </Link>
               <Link href="/agency/dashboard" className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-500 hover:text-gray-900">
