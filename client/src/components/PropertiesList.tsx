@@ -24,9 +24,9 @@ interface PropertiesListProps {
 
 export function PropertiesList({ transactionType }: PropertiesListProps) {
   const { data: properties, isLoading, error } = useQuery<Property[]>({
-    queryKey: [`/api/properties/${transactionType}`],
+    queryKey: [`/api/properties/transaction/${transactionType}`],
     queryFn: async () => {
-      const response = await fetch(`/api/properties/${transactionType}`);
+      const response = await fetch(`/api/properties/transaction/${transactionType}`);
       if (!response.ok) {
         throw new Error('Failed to fetch properties');
       }

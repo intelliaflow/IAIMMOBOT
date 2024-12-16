@@ -1,18 +1,22 @@
 import type { Express } from "express";
-import { createServer } from "http";
+import { createServer, type Server } from "http";
 import { db } from "@db";
 import { properties, documents } from "@db/schema";
 import { eq } from "drizzle-orm";
 
-export function registerRoutes(app: Express) {
+export function registerRoutes(app: Express): Server {
   const httpServer = createServer(app);
 
-  // Get properties by transaction type
-  app.get("/api/properties/:type", async (req, res) => {
+  // Get properties by transaction type (sale/rent)
+  app.get("/api/properties/transaction/:type", async (req, res) => {
     try {
       const transactionType = req.params.type;
+      
+      // Validate transaction type
       if (transactionType !== 'sale' && transactionType !== 'rent') {
-        return res.status(400).json({ message: "Invalid transaction type" });
+        return res.status(400).json({ 
+          message: "Invalid transaction type. Must be either 'sale' or 'rent'." 
+        });
       }
 
       const filteredProperties = await db
@@ -22,27 +26,42 @@ export function registerRoutes(app: Express) {
         .orderBy(properties.createdAt);
 
       console.log(`Properties fetched (${transactionType}):`, filteredProperties.length);
-      res.json(filteredProperties);
+      return res.json(filteredProperties);
     } catch (error) {
       console.error("Error fetching properties:", error);
-      res.status(500).json({ message: `Failed to fetch properties for ${req.params.type}` });
+      return res.status(500).json({ 
+        message: `Failed to fetch properties for ${req.params.type}` 
+      });
     }
   });
 
   // Get property by ID
-  app.get("/api/properties/:id", async (req, res) => {
+  app.get("/api/properties/detail/:id", async (req, res) => {
     try {
+      const propertyId = parseInt(req.params.id);
+      
+      if (isNaN(propertyId)) {
+        return res.status(400).json({ 
+          message: "Invalid property ID. Must be a number." 
+        });
+      }
+
       const property = await db.query.properties.findFirst({
-        where: eq(properties.id, parseInt(req.params.id)),
+        where: eq(properties.id, propertyId),
       });
       
       if (!property) {
-        return res.status(404).json({ message: "Property not found" });
+        return res.status(404).json({ 
+          message: "Property not found" 
+        });
       }
       
-      res.json(property);
+      return res.json(property);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch property" });
+      console.error("Error fetching property details:", error);
+      return res.status(500).json({ 
+        message: "Failed to fetch property details" 
+      });
     }
   });
 
@@ -52,34 +71,44 @@ export function registerRoutes(app: Express) {
       // TODO: Get actual agency ID from session
       const agencyId = 1;
       
-      const agencyProperties = await db.query.properties.findMany({
-        where: eq(properties.agencyId, agencyId),
-        orderBy: (properties, { desc }) => [desc(properties.createdAt)],
-      });
+      const agencyProperties = await db
+        .select()
+        .from(properties)
+        .where(eq(properties.agencyId, agencyId))
+        .orderBy(properties.createdAt);
       
-      res.json(agencyProperties);
+      return res.json(agencyProperties);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch agency properties" });
+      console.error("Error fetching agency properties:", error);
+      return res.status(500).json({ 
+        message: "Failed to fetch agency properties" 
+      });
     }
   });
 
   // Create property
   app.post("/api/properties", async (req, res) => {
     try {
-      const newProperty = await db.insert(properties).values(req.body);
-      res.status(201).json(newProperty);
+      const newProperty = await db.insert(properties).values(req.body).returning();
+      return res.status(201).json(newProperty[0]);
     } catch (error) {
-      res.status(500).json({ message: "Failed to create property" });
+      console.error("Error creating property:", error);
+      return res.status(500).json({ 
+        message: "Failed to create property" 
+      });
     }
   });
 
   // Upload document
   app.post("/api/documents", async (req, res) => {
     try {
-      const newDocument = await db.insert(documents).values(req.body);
-      res.status(201).json(newDocument);
+      const newDocument = await db.insert(documents).values(req.body).returning();
+      return res.status(201).json(newDocument[0]);
     } catch (error) {
-      res.status(500).json({ message: "Failed to upload document" });
+      console.error("Error uploading document:", error);
+      return res.status(500).json({ 
+        message: "Failed to upload document" 
+      });
     }
   });
 
