@@ -35,16 +35,22 @@ export function SearchFilters({ transactionType }: SearchFiltersProps) {
       transactionType
     };
 
-    // Invalidate and refetch with new search params
+    // Store search params in query client state
+    queryClient.setQueryData(['searchParams'], searchParams);
+
+    // Invalidate and immediately refetch with new search params
     queryClient.invalidateQueries({
       queryKey: transactionType 
         ? [`/api/properties/transaction/${transactionType}`] 
-        : ['/api/properties'],
-      refetchType: 'active'
+        : ['/api/properties']
+    }).then(() => {
+      // Force an immediate refetch
+      queryClient.refetchQueries({
+        queryKey: transactionType 
+          ? [`/api/properties/transaction/${transactionType}`] 
+          : ['/api/properties']
+      });
     });
-
-    // Store search params in query client state
-    queryClient.setQueryData(['searchParams'], searchParams);
   };
 
   return (
