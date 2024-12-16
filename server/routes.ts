@@ -37,6 +37,24 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Get latest properties
+  app.get("/api/properties", async (req, res) => {
+    try {
+      const latestProperties = await db
+        .select()
+        .from(properties)
+        .orderBy(properties.createdAt, "desc")
+        .limit(6);
+
+      return res.json(latestProperties);
+    } catch (error) {
+      console.error("Error fetching latest properties:", error);
+      return res.status(500).json({ 
+        message: "Failed to fetch latest properties" 
+      });
+    }
+  });
+
   // Get property by ID
   app.get("/api/properties/detail/:id", async (req, res) => {
     try {
