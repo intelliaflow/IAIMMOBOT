@@ -30,28 +30,35 @@ export function registerRoutes(app: Express): Server {
       });
 
       // Build conditions array
-      const conditions = [eq(properties.transactionType, transactionType)];
+      let conditions: any[] = [eq(properties.transactionType, transactionType)];
       
-      if (location) {
-        conditions.push(sql`${properties.location} ILIKE ${`%${location}%`}`);
+      if (location && typeof location === 'string') {
+        conditions.push(sql`LOWER(${properties.location}) LIKE LOWER(${'%' + location + '%'})`);
       }
-      if (propertyType) {
-        conditions.push(eq(properties.type, propertyType as string));
+      
+      if (propertyType && typeof propertyType === 'string') {
+        conditions.push(eq(properties.type, propertyType));
       }
-      if (rooms) {
+      
+      if (rooms && !isNaN(parseInt(rooms as string))) {
         conditions.push(eq(properties.bedrooms, parseInt(rooms as string)));
       }
-      if (minPrice) {
-        conditions.push(sql`${properties.price} >= ${parseInt(minPrice as string)}`);
+      
+      if (minPrice && !isNaN(parseInt(minPrice as string))) {
+        const minPriceValue = parseInt(minPrice as string);
+        conditions.push(sql`${properties.price} >= ${minPriceValue}`);
       }
-      if (maxPrice) {
-        conditions.push(sql`${properties.price} <= ${parseInt(maxPrice as string)}`);
+      
+      if (maxPrice && !isNaN(parseInt(maxPrice as string))) {
+        const maxPriceValue = parseInt(maxPrice as string);
+        conditions.push(sql`${properties.price} <= ${maxPriceValue}`);
       }
 
       const filteredProperties = await db
         .select()
         .from(properties)
-        .where(and(...conditions));
+        .where(and(...conditions))
+        .orderBy(properties.createdAt);
       
       console.log(`Found ${filteredProperties.length} properties matching criteria`);
       return res.json(filteredProperties);
