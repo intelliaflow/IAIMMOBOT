@@ -22,7 +22,7 @@ export function Home() {
             </p>
           </div>
           <div className="mt-10">
-            <SearchFilters />
+            <SearchFilters transactionType={undefined} />
           </div>
         </div>
       </section>
