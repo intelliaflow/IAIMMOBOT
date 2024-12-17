@@ -76,22 +76,21 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
 
       console.log('Searching with params:', searchParams);
       
-      // Mettre à jour les paramètres de recherche et déclencher la recherche
+      // Mettre à jour les paramètres de recherche
       queryClient.setQueryData(['searchParams'], searchParams);
       
       if (onSearch) {
+        // Si onSearch est fourni, laisser le composant parent gérer la recherche
         onSearch(searchParams);
       } else {
-        // Invalider toutes les requêtes de propriétés
-        await queryClient.invalidateQueries({
-          queryKey: ['/api/properties'],
+        // Sur la page d'accueil
+        await queryClient.invalidateQueries({ 
+          queryKey: ['/api/properties']
+        });
+        await queryClient.refetchQueries({ 
+          queryKey: ['/api/properties']
         });
       }
-
-      // Forcer un refetch immédiat
-      await queryClient.refetchQueries({
-        queryKey: ['/api/properties', searchParams],
-      });
     } catch (error) {
       console.error('Erreur lors de la recherche:', error);
       toast({

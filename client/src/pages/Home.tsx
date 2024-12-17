@@ -9,16 +9,18 @@ export function Home() {
   const searchParams = queryClient.getQueryData<SearchParams>(['searchParams']);
 
   const { data: properties, isLoading } = useQuery<Property[]>({
-    queryKey: ["/api/properties", searchParams],
+    queryKey: ["/api/properties"],
     enabled: true,
-    queryFn: async ({ queryKey }) => {
+    queryFn: async () => {
+      const currentSearchParams = queryClient.getQueryData<SearchParams>(['searchParams']);
       const params = new URLSearchParams();
-      if (searchParams?.location) params.append('location', searchParams.location);
-      if (searchParams?.propertyType) params.append('type', searchParams.propertyType);
-      if (searchParams?.rooms) params.append('rooms', searchParams.rooms);
-      if (searchParams?.minPrice) params.append('minPrice', searchParams.minPrice.toString());
-      if (searchParams?.maxPrice) params.append('maxPrice', searchParams.maxPrice.toString());
-      if (searchParams?.transactionType) params.append('transactionType', searchParams.transactionType);
+      
+      if (currentSearchParams?.location) params.append('location', currentSearchParams.location);
+      if (currentSearchParams?.propertyType) params.append('type', currentSearchParams.propertyType);
+      if (currentSearchParams?.rooms) params.append('rooms', currentSearchParams.rooms);
+      if (currentSearchParams?.minPrice) params.append('minPrice', currentSearchParams.minPrice.toString());
+      if (currentSearchParams?.maxPrice) params.append('maxPrice', currentSearchParams.maxPrice.toString());
+      if (currentSearchParams?.transactionType) params.append('transactionType', currentSearchParams.transactionType);
 
       const queryString = params.toString();
       const url = `/api/properties${queryString ? `?${queryString}` : ''}`;
