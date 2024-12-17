@@ -1,5 +1,6 @@
 import { PropertiesList } from "@/components/PropertiesList";
-import { SearchFilters } from "@/components/SearchFilters";
+import { SearchFilters, type SearchParams } from "@/components/SearchFilters";
+import { useQueryClient } from "@tanstack/react-query";
 
 export function RentProperties() {
   const queryClient = useQueryClient();
