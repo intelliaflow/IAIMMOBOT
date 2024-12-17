@@ -50,23 +50,39 @@ export function SearchFilters({ transactionType }: SearchFiltersProps) {
       if (searchParams.minPrice) params.append('minPrice', searchParams.minPrice.toString());
       if (searchParams.maxPrice) params.append('maxPrice', searchParams.maxPrice.toString());
 
-      // Effectuer la recherche directement
-      const response = await fetch(
-        `/api/properties/transaction/${transactionType}?${params.toString()}`
-      );
+      let results;
+      if (transactionType) {
+        // Effectuer la recherche filtrée par type de transaction
+        const response = await fetch(
+          `/api/properties/transaction/${transactionType}?${params.toString()}`
+        );
 
-      if (!response.ok) {
-        throw new Error('Erreur lors de la recherche');
+        if (!response.ok) {
+          throw new Error('Erreur lors de la recherche');
+        }
+
+        results = await response.json();
+        console.log('Search results:', results);
+
+        // Mettre à jour le cache avec les nouveaux résultats
+        queryClient.setQueryData(
+          [`/api/properties/transaction/${transactionType}`],
+          results
+        );
+      } else {
+        // Sur la page d'accueil, utiliser l'API générale
+        const response = await fetch(`/api/properties?${params.toString()}`);
+
+        if (!response.ok) {
+          throw new Error('Erreur lors de la recherche');
+        }
+
+        results = await response.json();
+        console.log('Search results:', results);
+
+        // Mettre à jour le cache avec les nouveaux résultats
+        queryClient.setQueryData(['/api/properties'], results);
       }
-
-      const results = await response.json();
-      console.log('Search results:', results);
-
-      // Mettre à jour le cache avec les nouveaux résultats
-      queryClient.setQueryData(
-        [`/api/properties/transaction/${transactionType}`],
-        results
-      );
     } catch (error) {
       console.error('Erreur lors de la recherche:', error);
     } finally {

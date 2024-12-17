@@ -70,20 +70,48 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Get latest properties
+  // Get properties with filters
   app.get("/api/properties", async (req, res) => {
     try {
-      const latestProperties = await db
+      const { location, type: propertyType, rooms, minPrice, maxPrice } = req.query;
+      
+      // Build conditions array
+      let conditions: any[] = [];
+      
+      if (location && typeof location === 'string') {
+        conditions.push(sql`LOWER(${properties.location}) LIKE LOWER(${'%' + location + '%'})`);
+      }
+      
+      if (propertyType && typeof propertyType === 'string') {
+        conditions.push(eq(properties.type, propertyType));
+      }
+      
+      if (rooms && !isNaN(parseInt(rooms as string))) {
+        conditions.push(eq(properties.bedrooms, parseInt(rooms as string)));
+      }
+      
+      if (minPrice && !isNaN(parseInt(minPrice as string))) {
+        const minPriceValue = parseInt(minPrice as string);
+        conditions.push(sql`${properties.price} >= ${minPriceValue}`);
+      }
+      
+      if (maxPrice && !isNaN(parseInt(maxPrice as string))) {
+        const maxPriceValue = parseInt(maxPrice as string);
+        conditions.push(sql`${properties.price} <= ${maxPriceValue}`);
+      }
+
+      const filteredProperties = await db
         .select()
         .from(properties)
-        .orderBy(properties.createdAt, "desc")
+        .where(conditions.length > 0 ? and(...conditions) : undefined)
+        .orderBy(properties.createdAt)
         .limit(6);
-
-      return res.json(latestProperties);
+      
+      return res.json(filteredProperties);
     } catch (error) {
-      console.error("Error fetching latest properties:", error);
+      console.error("Error fetching properties:", error);
       return res.status(500).json({ 
-        message: "Failed to fetch latest properties" 
+        message: "Failed to fetch properties" 
       });
     }
   });
