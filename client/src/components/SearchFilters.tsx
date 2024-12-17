@@ -106,8 +106,7 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
   };
 
   const FilterForm = useCallback(() => (
-    <form onSubmit={handleSearch}>
-      <div className="space-y-8">
+    <div className="space-y-8">
         {/* Section Localisation avec auto-complétion */}
         <LocationSearch
           value={location}
@@ -215,7 +214,6 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
             )}
           </Button>
         </div>
-      </form>
   ), [
     handleSearch,
     isSearching,
