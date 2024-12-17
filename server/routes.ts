@@ -170,13 +170,60 @@ export function registerRoutes(app: Express): Server {
   // Create property
   app.post("/api/properties", async (req, res) => {
     try {
-      const newProperty = await db.insert(properties).values(req.body).returning();
+      // TODO: Get actual agency ID from session
+      const agencyId = 1;
+      const propertyData = {
+        ...req.body,
+        agencyId,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      const newProperty = await db.insert(properties).values(propertyData).returning();
       return res.status(201).json(newProperty[0]);
     } catch (error) {
       console.error("Error creating property:", error);
       return res.status(500).json({ 
         message: "Failed to create property" 
       });
+    }
+  });
+
+  // Update property
+  app.put("/api/properties/:id", async (req, res) => {
+    try {
+      const propertyId = parseInt(req.params.id);
+      if (isNaN(propertyId)) {
+        return res.status(400).json({ message: "Invalid property ID" });
+      }
+
+      // TODO: Get actual agency ID from session and verify ownership
+      const agencyId = 1;
+      
+      const property = await db.query.properties.findFirst({
+        where: and(
+          eq(properties.id, propertyId),
+          eq(properties.agencyId, agencyId)
+        ),
+      });
+
+      if (!property) {
+        return res.status(404).json({ message: "Property not found or unauthorized" });
+      }
+
+      const updatedProperty = await db
+        .update(properties)
+        .set({
+          ...req.body,
+          updatedAt: new Date()
+        })
+        .where(eq(properties.id, propertyId))
+        .returning();
+
+      return res.json(updatedProperty[0]);
+    } catch (error) {
+      console.error("Error updating property:", error);
+      return res.status(500).json({ message: "Failed to update property" });
     }
   });
 

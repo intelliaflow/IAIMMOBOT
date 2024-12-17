@@ -10,7 +10,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Upload } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Plus, Upload, Pencil } from "lucide-react";
+import { PropertyForm } from "@/components/PropertyForm";
 import type { Property } from "@db/schema";
 
 export function AgencyDashboard() {
@@ -19,6 +21,8 @@ export function AgencyDashboard() {
   });
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isPropertyFormOpen, setIsPropertyFormOpen] = useState(false);
+  const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files?.[0]) {
@@ -26,14 +30,44 @@ export function AgencyDashboard() {
     }
   };
 
+  const handleEditProperty = (property: Property) => {
+    setSelectedProperty(property);
+    setIsPropertyFormOpen(true);
+  };
+
+  const handleCreateProperty = () => {
+    setSelectedProperty(null);
+    setIsPropertyFormOpen(true);
+  };
+
+  const handlePropertyFormSuccess = () => {
+    setIsPropertyFormOpen(false);
+    setSelectedProperty(null);
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">Tableau de bord</h1>
-        <Button>
-          <Plus className="h-4 w-4 mr-2" />
-          Nouvelle annonce
-        </Button>
+        <Dialog open={isPropertyFormOpen} onOpenChange={setIsPropertyFormOpen}>
+          <DialogTrigger asChild>
+            <Button onClick={handleCreateProperty}>
+              <Plus className="h-4 w-4 mr-2" />
+              Nouvelle annonce
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>
+                {selectedProperty ? "Modifier l'annonce" : "Créer une nouvelle annonce"}
+              </DialogTitle>
+            </DialogHeader>
+            <PropertyForm 
+              property={selectedProperty} 
+              onSuccess={handlePropertyFormSuccess}
+            />
+          </DialogContent>
+        </Dialog>
       </div>
 
       <Tabs defaultValue="properties">
@@ -47,11 +81,13 @@ export function AgencyDashboard() {
             {properties?.map((property) => (
               <Card key={property.id}>
                 <div className="aspect-[16/9] relative overflow-hidden">
-                  <img
-                    src={property.images[0]}
-                    alt={property.title}
-                    className="object-cover w-full h-full rounded-t-lg"
-                  />
+                  {property.images && property.images[0] && (
+                    <img
+                      src={property.images[0]}
+                      alt={property.title}
+                      className="object-cover w-full h-full rounded-t-lg"
+                    />
+                  )}
                 </div>
                 <CardContent className="p-4">
                   <h3 className="font-semibold mb-2">{property.title}</h3>
@@ -60,7 +96,12 @@ export function AgencyDashboard() {
                     <span className="font-bold">
                       {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(property.price)}
                     </span>
-                    <Button variant="outline" size="sm">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleEditProperty(property)}
+                    >
+                      <Pencil className="h-4 w-4 mr-2" />
                       Modifier
                     </Button>
                   </div>
