@@ -139,7 +139,7 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
             {showTransactionTypeFilter && (
               <div className="space-y-2">
                 <Label htmlFor="transactionType">Type de transaction</Label>
-                <Select value={selectedTransactionType} onValueChange={setSelectedTransactionType}>
+                <Select value={selectedTransactionType || ''} onValueChange={(value: 'sale' | 'rent') => setSelectedTransactionType(value)}>
                   <SelectTrigger id="transactionType">
                     <SelectValue placeholder="Choisir (vente/location)" />
                   </SelectTrigger>

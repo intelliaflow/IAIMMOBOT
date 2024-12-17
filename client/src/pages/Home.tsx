@@ -6,21 +6,21 @@ import type { SearchParams } from "@/components/SearchFilters";
 
 export function Home() {
   const queryClient = useQueryClient();
-  const searchParams = queryClient.getQueryData<SearchParams>(['searchParams']);
+  const searchParams = queryClient.getQueryData<SearchParams>(['searchParams']) || {};
 
   const { data: properties, isLoading } = useQuery<Property[]>({
     queryKey: ["/api/properties", searchParams],
     enabled: true,
     queryFn: async ({ queryKey }) => {
-      const [_, params] = queryKey;
+      const [_, params] = queryKey as [string, SearchParams];
       const urlParams = new URLSearchParams();
       
-      if (params?.location) urlParams.append('location', params.location);
-      if (params?.propertyType) urlParams.append('type', params.propertyType);
-      if (params?.rooms) urlParams.append('rooms', params.rooms);
-      if (params?.minPrice) urlParams.append('minPrice', params.minPrice.toString());
-      if (params?.maxPrice) urlParams.append('maxPrice', params.maxPrice.toString());
-      if (params?.transactionType) urlParams.append('transactionType', params.transactionType);
+      if (params.location) urlParams.append('location', params.location);
+      if (params.propertyType) urlParams.append('type', params.propertyType);
+      if (params.rooms) urlParams.append('rooms', params.rooms);
+      if (params.minPrice) urlParams.append('minPrice', params.minPrice.toString());
+      if (params.maxPrice) urlParams.append('maxPrice', params.maxPrice.toString());
+      if (params.transactionType) urlParams.append('transactionType', params.transactionType);
 
       const queryString = urlParams.toString();
       const url = `/api/properties${queryString ? `?${queryString}` : ''}`;
