@@ -4,6 +4,30 @@ import { db } from "@db";
 import { properties, documents } from "@db/schema";
 import { eq, and, sql, gte } from "drizzle-orm";
 
+function handleRoomsFilter(rooms: string | undefined) {
+  if (!rooms) return null;
+  
+  console.log('Processing rooms filter value:', rooms);
+  const roomsValue = parseInt(rooms);
+  
+  if (isNaN(roomsValue)) {
+    console.log('Invalid rooms value:', rooms);
+    return null;
+  }
+
+  // Gestion spéciale pour Studio (1 pièce) et 5+ pièces
+  if (roomsValue === 1) {
+    console.log('Filtering for Studio/1 pièce');
+    return eq(properties.bedrooms, 1);
+  } else if (roomsValue === 5) {
+    console.log('Filtering for 5+ pièces');
+    return gte(properties.bedrooms, 5);
+  } else {
+    console.log('Filtering for exact number of rooms:', roomsValue);
+    return eq(properties.bedrooms, roomsValue);
+  }
+}
+
 export function registerRoutes(app: Express): Server {
   const httpServer = createServer(app);
 
@@ -40,14 +64,9 @@ export function registerRoutes(app: Express): Server {
         conditions.push(eq(properties.type, propertyType));
       }
       
-      if (rooms && !isNaN(parseInt(rooms as string))) {
-        const roomsValue = parseInt(rooms as string);
-        if (roomsValue === 5) {
-          // Pour 5+, on utilise gte (greater than or equal)
-          conditions.push(gte(properties.bedrooms, 5));
-        } else {
-          conditions.push(eq(properties.bedrooms, roomsValue));
-        }
+      const roomsCondition = handleRoomsFilter(rooms as string);
+      if (roomsCondition) {
+        conditions.push(roomsCondition);
       }
       
       if (minPrice && !isNaN(parseInt(minPrice as string))) {
@@ -92,14 +111,9 @@ export function registerRoutes(app: Express): Server {
         conditions.push(eq(properties.type, propertyType));
       }
       
-      if (rooms && !isNaN(parseInt(rooms as string))) {
-        const roomsValue = parseInt(rooms as string);
-        if (roomsValue === 5) {
-          // Pour 5+, on utilise gte (greater than or equal)
-          conditions.push(gte(properties.bedrooms, 5));
-        } else {
-          conditions.push(eq(properties.bedrooms, roomsValue));
-        }
+      const roomsCondition = handleRoomsFilter(rooms as string);
+      if (roomsCondition) {
+        conditions.push(roomsCondition);
       }
       
       if (minPrice && !isNaN(parseInt(minPrice as string))) {
@@ -179,14 +193,9 @@ export function registerRoutes(app: Express): Server {
         conditions.push(eq(properties.type, propertyType));
       }
       
-      if (rooms && !isNaN(parseInt(rooms as string))) {
-        const roomsValue = parseInt(rooms as string);
-        if (roomsValue === 5) {
-          // Pour 5+, on utilise gte (greater than or equal)
-          conditions.push(gte(properties.bedrooms, 5));
-        } else {
-          conditions.push(eq(properties.bedrooms, roomsValue));
-        }
+      const roomsCondition = handleRoomsFilter(rooms as string);
+      if (roomsCondition) {
+        conditions.push(roomsCondition);
       }
       
       if (minPrice && !isNaN(parseInt(minPrice as string))) {
