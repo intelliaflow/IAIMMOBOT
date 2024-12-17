@@ -37,8 +37,8 @@ export function PropertiesList({ transactionType }: PropertiesListProps) {
       console.log(`Received properties:`, data);
       return data;
     },
-    staleTime: 0, // Always consider the data stale
-    refetchOnMount: true // Refetch when the component mounts
+    staleTime: 1000, // Consider data fresh for 1 second
+    cacheTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
   });
 
   if (isLoading) {
