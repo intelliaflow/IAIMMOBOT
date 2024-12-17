@@ -12,20 +12,21 @@ import { useToast } from "@/hooks/use-toast";
 const propertySchema = z.object({
   title: z.string().min(1, "Le titre est requis"),
   description: z.string().min(1, "La description est requise"),
-  price: z.string().min(1, "Le prix est requis"),
+  price: z.coerce.number().min(0, "Le prix doit être positif"),
   location: z.string().min(1, "La localisation est requise"),
-  bedrooms: z.string().min(1, "Le nombre de chambres est requis"),
-  bathrooms: z.string().min(1, "Le nombre de salles de bain est requis"),
-  area: z.string().min(1, "La surface est requise"),
+  bedrooms: z.coerce.number().min(0, "Le nombre de chambres doit être positif"),
+  bathrooms: z.coerce.number().min(0, "Le nombre de salles de bain doit être positif"),
+  area: z.coerce.number().min(0, "La surface doit être positive"),
   type: z.string().min(1, "Le type de bien est requis"),
   transactionType: z.string().min(1, "Le type de transaction est requis"),
   features: z.array(z.string()).default([]),
+  images: z.array(z.string()).nullable().default(null),
 });
 
 type PropertyFormValues = z.infer<typeof propertySchema>;
 
 interface PropertyFormProps {
-  property?: PropertyFormValues;
+  property?: Partial<Property>;
   onSuccess?: () => void;
 }
 
@@ -35,8 +36,17 @@ export function PropertyForm({ property, onSuccess }: PropertyFormProps) {
 
   const form = useForm<PropertyFormValues>({
     resolver: zodResolver(propertySchema),
-    defaultValues: property || {
+    defaultValues: property ? {
+      ...property,
+      price: property.price || 0,
+      bedrooms: property.bedrooms || 0,
+      bathrooms: property.bathrooms || 0,
+      area: property.area || 0,
+      features: property.features || [],
+      images: property.images || null,
+    } : {
       features: [],
+      images: null,
     },
   });
 
