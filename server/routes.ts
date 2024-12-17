@@ -146,19 +146,45 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Get agency properties
+  // Get agency properties with filters
   app.get("/api/properties/agency", async (req, res) => {
     try {
       // TODO: Get actual agency ID from session
       const agencyId = 1;
+      const { location, type: propertyType, rooms, minPrice, maxPrice } = req.query;
+
+      // Build conditions array
+      let conditions: any[] = [eq(properties.agencyId, agencyId)];
       
-      const agencyProperties = await db
+      if (location && typeof location === 'string') {
+        conditions.push(sql`LOWER(${properties.location}) LIKE LOWER(${'%' + location + '%'})`);
+      }
+      
+      if (propertyType && typeof propertyType === 'string') {
+        conditions.push(eq(properties.type, propertyType));
+      }
+      
+      if (rooms && !isNaN(parseInt(rooms as string))) {
+        conditions.push(eq(properties.bedrooms, parseInt(rooms as string)));
+      }
+      
+      if (minPrice && !isNaN(parseInt(minPrice as string))) {
+        const minPriceValue = parseInt(minPrice as string);
+        conditions.push(sql`${properties.price} >= ${minPriceValue}`);
+      }
+      
+      if (maxPrice && !isNaN(parseInt(maxPrice as string))) {
+        const maxPriceValue = parseInt(maxPrice as string);
+        conditions.push(sql`${properties.price} <= ${maxPriceValue}`);
+      }
+
+      const filteredProperties = await db
         .select()
         .from(properties)
-        .where(eq(properties.agencyId, agencyId))
+        .where(and(...conditions))
         .orderBy(properties.createdAt);
       
-      return res.json(agencyProperties);
+      return res.json(filteredProperties);
     } catch (error) {
       console.error("Error fetching agency properties:", error);
       return res.status(500).json({ 
