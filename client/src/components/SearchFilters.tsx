@@ -25,7 +25,7 @@ export function SearchFilters({ transactionType }: SearchFiltersProps) {
   const [rooms, setRooms] = useState<string>();
   const [priceRange, setPriceRange] = useState([0, 1000000]);
 
-  const handleSearch = () => {
+  const handleSearch = async () => {
     const searchParams: SearchParams = {
       location: location || undefined,
       propertyType,
@@ -35,22 +35,17 @@ export function SearchFilters({ transactionType }: SearchFiltersProps) {
       transactionType
     };
 
-    // Store search params in query client state
+    // Update search params in query client state
     queryClient.setQueryData(['searchParams'], searchParams);
 
-    // Invalidate and immediately refetch with new search params
-    queryClient.invalidateQueries({
-      queryKey: transactionType 
-        ? [`/api/properties/transaction/${transactionType}`] 
-        : ['/api/properties']
-    }).then(() => {
-      // Force an immediate refetch
-      queryClient.refetchQueries({
-        queryKey: transactionType 
-          ? [`/api/properties/transaction/${transactionType}`] 
-          : ['/api/properties']
-      });
-    });
+    // Build query key based on all search parameters
+    const queryKey = transactionType 
+      ? [`/api/properties/transaction/${transactionType}`, searchParams] 
+      : ['/api/properties', searchParams];
+
+    // Invalidate and force refetch
+    await queryClient.invalidateQueries({ queryKey });
+    await queryClient.refetchQueries({ queryKey, type: 'active' });
   };
 
   return (

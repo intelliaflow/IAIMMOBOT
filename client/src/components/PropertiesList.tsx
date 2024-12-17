@@ -13,14 +13,7 @@ export function PropertiesList({ transactionType }: PropertiesListProps) {
   const searchParams = queryClient.getQueryData<SearchParams>(['searchParams']) || {};
 
   const { data: properties, isLoading, error } = useQuery<Property[]>({
-    queryKey: [
-      `/api/properties/transaction/${transactionType}`,
-      searchParams.location,
-      searchParams.propertyType,
-      searchParams.rooms,
-      searchParams.minPrice,
-      searchParams.maxPrice
-    ],
+    queryKey: [`/api/properties/transaction/${transactionType}`, searchParams],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (searchParams.location) params.append('location', searchParams.location);
