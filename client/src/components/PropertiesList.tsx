@@ -13,19 +13,23 @@ export function PropertiesList({ transactionType }: PropertiesListProps) {
   const searchParams = queryClient.getQueryData<SearchParams>(['searchParams']) || {};
 
   const { data: properties, isLoading, error } = useQuery<Property[]>({
-    queryKey: [`/api/properties/transaction/${transactionType}`],
-    queryFn: async () => {
-      const params = new URLSearchParams();
-      if (searchParams.location) params.append('location', searchParams.location);
-      if (searchParams.propertyType) params.append('type', searchParams.propertyType);
-      if (searchParams.rooms) params.append('rooms', searchParams.rooms);
-      if (searchParams.minPrice) params.append('minPrice', searchParams.minPrice.toString());
-      if (searchParams.maxPrice) params.append('maxPrice', searchParams.maxPrice.toString());
+    queryKey: [`/api/properties/transaction/${transactionType}`, searchParams],
+    queryFn: async ({ queryKey }) => {
+      const [_, params] = queryKey;
+      const urlParams = new URLSearchParams();
+      
+      if (params.location) urlParams.append('location', params.location);
+      if (params.propertyType) urlParams.append('type', params.propertyType);
+      if (params.rooms) urlParams.append('rooms', params.rooms);
+      if (params.minPrice) urlParams.append('minPrice', params.minPrice.toString());
+      if (params.maxPrice) urlParams.append('maxPrice', params.maxPrice.toString());
 
-      const queryString = params.toString();
+      const queryString = urlParams.toString();
       const url = `/api/properties/transaction/${transactionType}${queryString ? `?${queryString}` : ''}`;
       
       console.log(`Fetching properties with URL: ${url}`);
+      console.log('Search params:', params);
+      
       const response = await fetch(url);
       
       if (!response.ok) {
@@ -37,8 +41,7 @@ export function PropertiesList({ transactionType }: PropertiesListProps) {
       console.log(`Received properties:`, data);
       return data;
     },
-    staleTime: 1000, // Consider data fresh for 1 second
-    cacheTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
+    enabled: true,
   });
 
   if (isLoading) {
