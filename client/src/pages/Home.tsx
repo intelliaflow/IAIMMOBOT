@@ -10,31 +10,34 @@ export function Home() {
 
   const { data: properties, isLoading } = useQuery<Property[]>({
     queryKey: ["/api/properties", searchParams],
-    enabled: true,
     queryFn: async ({ queryKey }) => {
-      const [_, params] = queryKey as [string, SearchParams];
+      const [_, params] = queryKey;
       const urlParams = new URLSearchParams();
       
-      if (params.location) urlParams.append('location', params.location);
-      if (params.propertyType) urlParams.append('type', params.propertyType);
-      if (params.rooms) urlParams.append('rooms', params.rooms);
-      if (params.minPrice) urlParams.append('minPrice', params.minPrice.toString());
-      if (params.maxPrice) urlParams.append('maxPrice', params.maxPrice.toString());
-      if (params.transactionType) urlParams.append('transactionType', params.transactionType);
+      if (params?.location) urlParams.append('location', params.location);
+      if (params?.propertyType) urlParams.append('type', params.propertyType);
+      if (params?.rooms) urlParams.append('rooms', params.rooms);
+      if (params?.minPrice) urlParams.append('minPrice', params.minPrice.toString());
+      if (params?.maxPrice) urlParams.append('maxPrice', params.maxPrice.toString());
+      if (params?.transactionType) urlParams.append('transactionType', params.transactionType);
 
       const queryString = urlParams.toString();
       const url = `/api/properties${queryString ? `?${queryString}` : ''}`;
       
       console.log('Fetching properties with URL:', url);
       console.log('Search params:', params);
-      const response = await fetch(url);
       
+      const response = await fetch(url);
       if (!response.ok) {
         throw new Error('Failed to fetch properties');
       }
       
-      return response.json();
+      const data = await response.json();
+      console.log('Received properties:', data);
+      return data;
     },
+    enabled: true,
+    staleTime: 0, // Always refetch when params change
   });
 
   return (
@@ -51,7 +54,15 @@ export function Home() {
             </p>
           </div>
           <div className="mt-10">
-            <SearchFilters transactionType={undefined} />
+            <SearchFilters 
+              showTransactionTypeFilter={true}
+              onSearch={(params) => {
+                queryClient.setQueryData(['searchParams'], params);
+                queryClient.invalidateQueries({ 
+                  queryKey: ['/api/properties', params]
+                });
+              }}
+            />
           </div>
         </div>
       </section>
