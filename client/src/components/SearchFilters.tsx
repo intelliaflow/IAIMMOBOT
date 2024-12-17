@@ -83,12 +83,9 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
         // Si onSearch est fourni, laisser le composant parent gérer la recherche
         onSearch(searchParams);
       } else {
-        // Sur la page d'accueil
+        // Sur la page d'accueil, forcer un rechargement avec les nouveaux paramètres
         await queryClient.invalidateQueries({ 
-          queryKey: ['/api/properties']
-        });
-        await queryClient.refetchQueries({ 
-          queryKey: ['/api/properties']
+          queryKey: ['/api/properties', searchParams]
         });
       }
     } catch (error) {
