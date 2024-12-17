@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 
 interface SearchFiltersProps {
   transactionType?: 'sale' | 'rent';
@@ -29,6 +30,7 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
   const [selectedTransactionType, setSelectedTransactionType] = useState<'sale' | 'rent' | undefined>(transactionType);
   const [priceRange, setPriceRange] = useState([0, 1000000]);
   const [isSearching, setIsSearching] = useState(false);
+  const { toast } = useToast();
 
   // Store search params in query client cache
   const updateSearchParams = (params: SearchParams) => {
@@ -69,32 +71,34 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
         rooms,
         minPrice: priceRange[0],
         maxPrice: priceRange[1],
-        transactionType: selectedTransactionType || transactionType || undefined
+        transactionType: selectedTransactionType || transactionType
       };
 
       console.log('Searching with params:', searchParams);
       
-      // Mettre à jour les paramètres de recherche dans le cache
+      // Mettre à jour les paramètres de recherche et déclencher la recherche
       queryClient.setQueryData(['searchParams'], searchParams);
       
-      // Invalider les requêtes pertinentes pour forcer un rechargement
       if (onSearch) {
         onSearch(searchParams);
       } else {
-        queryClient.invalidateQueries({ 
+        // Invalider toutes les requêtes de propriétés
+        await queryClient.invalidateQueries({
           queryKey: ['/api/properties'],
-          exact: true
         });
-        
-        if (transactionType) {
-          queryClient.invalidateQueries({ 
-            queryKey: [`/api/properties/transaction/${transactionType}`],
-            exact: true
-          });
-        }
       }
+
+      // Forcer un refetch immédiat
+      await queryClient.refetchQueries({
+        queryKey: ['/api/properties', searchParams],
+      });
     } catch (error) {
       console.error('Erreur lors de la recherche:', error);
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue lors de la recherche",
+        variant: "destructive",
+      });
     } finally {
       setIsSearching(false);
     }

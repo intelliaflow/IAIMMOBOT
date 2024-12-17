@@ -10,7 +10,8 @@ export function Home() {
 
   const { data: properties, isLoading } = useQuery<Property[]>({
     queryKey: ["/api/properties", searchParams],
-    queryFn: async () => {
+    enabled: true,
+    queryFn: async ({ queryKey }) => {
       const params = new URLSearchParams();
       if (searchParams?.location) params.append('location', searchParams.location);
       if (searchParams?.propertyType) params.append('type', searchParams.propertyType);
