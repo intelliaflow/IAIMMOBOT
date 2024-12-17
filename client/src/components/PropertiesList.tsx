@@ -10,17 +10,24 @@ interface PropertiesListProps {
 
 export function PropertiesList({ transactionType }: PropertiesListProps) {
   const queryClient = useQueryClient();
-  const searchParams = queryClient.getQueryData<SearchParams>(['searchParams']);
+  const searchParams = queryClient.getQueryData<SearchParams>(['searchParams']) || {};
 
   const { data: properties, isLoading, error } = useQuery<Property[]>({
-    queryKey: [`/api/properties/transaction/${transactionType}`, searchParams],
+    queryKey: [
+      `/api/properties/transaction/${transactionType}`,
+      searchParams.location,
+      searchParams.propertyType,
+      searchParams.rooms,
+      searchParams.minPrice,
+      searchParams.maxPrice
+    ],
     queryFn: async () => {
       const params = new URLSearchParams();
-      if (searchParams?.location) params.append('location', searchParams.location);
-      if (searchParams?.propertyType) params.append('type', searchParams.propertyType);
-      if (searchParams?.rooms) params.append('rooms', searchParams.rooms);
-      if (searchParams?.minPrice) params.append('minPrice', searchParams.minPrice.toString());
-      if (searchParams?.maxPrice) params.append('maxPrice', searchParams.maxPrice.toString());
+      if (searchParams.location) params.append('location', searchParams.location);
+      if (searchParams.propertyType) params.append('type', searchParams.propertyType);
+      if (searchParams.rooms) params.append('rooms', searchParams.rooms);
+      if (searchParams.minPrice) params.append('minPrice', searchParams.minPrice.toString());
+      if (searchParams.maxPrice) params.append('maxPrice', searchParams.maxPrice.toString());
 
       const queryString = params.toString();
       const url = `/api/properties/transaction/${transactionType}${queryString ? `?${queryString}` : ''}`;
@@ -36,7 +43,9 @@ export function PropertiesList({ transactionType }: PropertiesListProps) {
       const data = await response.json();
       console.log(`Received properties:`, data);
       return data;
-    }
+    },
+    staleTime: 0, // Always consider the data stale
+    refetchOnMount: true // Refetch when the component mounts
   });
 
   if (isLoading) {
