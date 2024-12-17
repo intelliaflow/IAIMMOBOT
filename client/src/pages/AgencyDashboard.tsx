@@ -19,26 +19,26 @@ import type { Property } from "@db/schema";
 
 export function AgencyDashboard() {
   const queryClient = useQueryClient();
-  const searchParams = queryClient.getQueryData<SearchParams>(['searchParams']) || {};
+  const [currentSearchParams, setCurrentSearchParams] = useState<SearchParams>({});
   
   const { data: properties, isLoading } = useQuery<Property[]>({
-    queryKey: ["/api/properties/agency", searchParams],
+    queryKey: ["/api/properties/agency", currentSearchParams],
     queryFn: async ({ queryKey }) => {
-      const [_, currentSearchParams] = queryKey;
+      const [_, searchParams] = queryKey;
       const params = new URLSearchParams();
       
-      if (currentSearchParams?.location) params.append('location', currentSearchParams.location);
-      if (currentSearchParams?.propertyType) params.append('type', currentSearchParams.propertyType);
-      if (currentSearchParams?.rooms) params.append('rooms', currentSearchParams.rooms);
-      if (currentSearchParams?.minPrice) params.append('minPrice', currentSearchParams.minPrice.toString());
-      if (currentSearchParams?.maxPrice) params.append('maxPrice', currentSearchParams.maxPrice.toString());
-      if (currentSearchParams?.transactionType) params.append('transactionType', currentSearchParams.transactionType);
+      if (searchParams?.location) params.append('location', searchParams.location);
+      if (searchParams?.propertyType) params.append('type', searchParams.propertyType);
+      if (searchParams?.rooms) params.append('rooms', searchParams.rooms);
+      if (searchParams?.minPrice) params.append('minPrice', searchParams.minPrice.toString());
+      if (searchParams?.maxPrice) params.append('maxPrice', searchParams.maxPrice.toString());
+      if (searchParams?.transactionType) params.append('transactionType', searchParams.transactionType);
 
       const queryString = params.toString();
       const url = `/api/properties/agency${queryString ? `?${queryString}` : ''}`;
       
       console.log('Fetching agency properties with URL:', url);
-      console.log('Search params:', currentSearchParams);
+      console.log('Current search params:', searchParams);
       
       const response = await fetch(url);
       if (!response.ok) {
@@ -115,8 +115,12 @@ export function AgencyDashboard() {
               <SearchFilters 
                 showTransactionTypeFilter={true}
                 onSearch={(params) => {
-                  queryClient.setQueryData(['searchParams'], params);
-                  queryClient.invalidateQueries({ queryKey: ['/api/properties/agency'] });
+                  console.log('Search filters updated:', params);
+                  setCurrentSearchParams(params);
+                  queryClient.invalidateQueries({ 
+                    queryKey: ["/api/properties/agency", params],
+                    exact: true
+                  });
                 }}
               />
             </div>

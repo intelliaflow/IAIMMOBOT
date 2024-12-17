@@ -46,14 +46,24 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
     // Set new timeout
     (window as any).searchTimeout = setTimeout(() => {
       updateSearchParams(params);
+      
+      // Log the current search parameters
+      console.log('Updating search params:', params);
+      
       // Invalidate relevant queries based on context
-      const queries = ['/api/properties'];
-      if (transactionType) {
-        queries.push(`/api/properties/transaction/${transactionType}`);
+      if (onSearch) {
+        // If onSearch callback is provided, let the parent component handle query invalidation
+        onSearch(params);
+      } else {
+        // Otherwise, handle query invalidation here
+        const queries = ['/api/properties'];
+        if (transactionType) {
+          queries.push(`/api/properties/transaction/${transactionType}`);
+        }
+        queries.forEach(query => {
+          queryClient.invalidateQueries({ queryKey: [query] });
+        });
       }
-      queries.forEach(query => {
-        queryClient.invalidateQueries({ queryKey: [query, params] });
-      });
     }, 300); // Wait 300ms before triggering search
   };
 
