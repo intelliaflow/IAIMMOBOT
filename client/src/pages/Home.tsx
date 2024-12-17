@@ -22,10 +22,11 @@ export function Home() {
       if (params?.maxPrice) urlParams.append('maxPrice', params.maxPrice.toString());
       if (params?.transactionType) urlParams.append('transactionType', params.transactionType);
 
-      const queryString = params.toString();
+      const queryString = urlParams.toString();
       const url = `/api/properties${queryString ? `?${queryString}` : ''}`;
       
       console.log('Fetching properties with URL:', url);
+      console.log('Search params:', params);
       const response = await fetch(url);
       
       if (!response.ok) {

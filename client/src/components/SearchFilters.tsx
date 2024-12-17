@@ -65,27 +65,34 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
     setIsSearching(true);
 
     try {
-      const searchParams: SearchParams = {
-        location: location?.trim() || undefined,
-        propertyType,
-        rooms,
-        minPrice: priceRange[0],
-        maxPrice: priceRange[1],
-        transactionType: selectedTransactionType || transactionType
-      };
+      // Ne pas inclure les paramètres undefined
+      const searchParams: SearchParams = {};
+      
+      if (location?.trim()) searchParams.location = location.trim();
+      if (propertyType) searchParams.propertyType = propertyType;
+      if (rooms) searchParams.rooms = rooms;
+      if (priceRange[0] > 0) searchParams.minPrice = priceRange[0];
+      if (priceRange[1] < 1000000) searchParams.maxPrice = priceRange[1];
+      if (selectedTransactionType || transactionType) {
+        searchParams.transactionType = selectedTransactionType || transactionType;
+      }
 
       console.log('Searching with params:', searchParams);
       
-      // Mettre à jour les paramètres de recherche
+      // Mettre à jour les paramètres de recherche dans le cache
       queryClient.setQueryData(['searchParams'], searchParams);
       
       if (onSearch) {
         // Si onSearch est fourni, laisser le composant parent gérer la recherche
         onSearch(searchParams);
       } else {
-        // Sur la page d'accueil, forcer un rechargement avec les nouveaux paramètres
+        // Sur la page d'accueil, invalider et recharger avec les nouveaux paramètres
         await queryClient.invalidateQueries({ 
-          queryKey: ['/api/properties', searchParams]
+          queryKey: ['/api/properties']
+        });
+        await queryClient.refetchQueries({
+          queryKey: ['/api/properties', searchParams],
+          exact: true
         });
       }
     } catch (error) {
