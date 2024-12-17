@@ -243,12 +243,19 @@ export function registerRoutes(app: Express): Server {
   // Upload property images
   app.post("/api/properties/images", async (req, res) => {
     try {
-      // TODO: Implement proper file storage
-      // For now, we'll just return fake image URLs
-      const imageUrls = Array.from({ length: req.body.count || 1 }, (_, i) => 
-        `https://picsum.photos/seed/${Math.random()}/${800 + i}/${600 + i}`
-      );
-      
+      const { images } = req.body;
+
+      if (!images || !Array.isArray(images)) {
+        return res.status(400).json({ message: "No images provided" });
+      }
+
+      // Store images and generate URLs
+      const imageUrls = images.map((base64Image) => {
+        // For now, we'll store the base64 image directly
+        // In production, you would want to store these in a proper storage service
+        return base64Image;
+      });
+
       return res.json({ urls: imageUrls });
     } catch (error) {
       console.error("Error uploading images:", error);

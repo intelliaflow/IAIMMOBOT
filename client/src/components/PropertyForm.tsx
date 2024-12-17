@@ -128,13 +128,24 @@ export function PropertyForm({ property, onSuccess }: PropertyFormProps) {
     if (!files) return;
 
     setIsUploading(true);
-    setSelectedImages(prev => [...prev, ...Array.from(files)]);
+    const newFiles = Array.from(files);
+    setSelectedImages(prev => [...prev, ...newFiles]);
 
     try {
+      // Convert images to base64
+      const base64Images = await Promise.all(
+        newFiles.map(file => new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        }))
+      );
+
       const response = await fetch('/api/properties/images', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ count: files.length }),
+        body: JSON.stringify({ images: base64Images }),
       });
 
       if (!response.ok) {
@@ -147,6 +158,10 @@ export function PropertyForm({ property, onSuccess }: PropertyFormProps) {
       // Update form with new image URLs
       const currentImages = form.getValues('images') || [];
       form.setValue('images', [...currentImages, ...urls]);
+
+      // Create object URLs for preview
+      const objectUrls = newFiles.map(file => URL.createObjectURL(file));
+      setUploadedImageUrls(prev => [...prev, ...objectUrls]);
     } catch (error) {
       toast({
         title: "Erreur",
