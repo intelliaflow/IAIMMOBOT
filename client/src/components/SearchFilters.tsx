@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { useQueryClient } from "@tanstack/react-query";
@@ -33,13 +34,21 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
     queryClient.setQueryData(['searchParams'], params);
   };
 
+  // Debounced update function for better performance
+  const debouncedUpdate = (params: SearchParams) => {
+    updateSearchParams(params);
+    queryClient.invalidateQueries({ queryKey: ['/api/properties'] });
+    queryClient.invalidateQueries({ queryKey: ['/api/properties/agency'] });
+    queryClient.invalidateQueries({ queryKey: ['/api/properties/transaction'] });
+  };
+
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSearching(true);
 
     try {
       const searchParams: SearchParams = {
-        location: location || undefined,
+        location: location?.trim() || undefined,
         propertyType,
         rooms,
         minPrice: priceRange[0],
@@ -49,8 +58,8 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
 
       console.log('Searching with params:', searchParams);
       
-      // Update search params in cache
-      updateSearchParams(searchParams);
+      // Update search params in cache and invalidate queries
+      debouncedUpdate(searchParams);
 
       // Build query string
       const params = new URLSearchParams();
@@ -104,11 +113,25 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
   return (
     <form onSubmit={handleSearch} className="bg-white p-4 rounded-lg shadow">
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <div>
+        <div className="space-y-2">
+          <Label>Localisation</Label>
           <Input 
-            placeholder="Où ? Ville, code postal..." 
+            placeholder="Ville, code postal..." 
             value={location}
-            onChange={(e) => setLocation(e.target.value)}
+            onChange={(e) => {
+              setLocation(e.target.value);
+              // Auto-update after 500ms of no typing
+              if (e.target.value === '') {
+                debouncedUpdate({
+                  location: undefined,
+                  propertyType,
+                  rooms,
+                  minPrice: priceRange[0],
+                  maxPrice: priceRange[1],
+                  transactionType: selectedTransactionType || transactionType
+                });
+              }
+            }}
           />
         </div>
         <div>
