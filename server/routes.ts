@@ -93,13 +93,17 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Get properties with filters
+  // Get properties with filters (used by home page)
   app.get("/api/properties", async (req, res) => {
     try {
-      const { location, type: propertyType, rooms, minPrice, maxPrice } = req.query;
+      const { location, type: propertyType, rooms, minPrice, maxPrice, transactionType } = req.query;
       
       // Build conditions array
       let conditions: any[] = [];
+      
+      if (transactionType && (transactionType === 'sale' || transactionType === 'rent')) {
+        conditions.push(eq(properties.transactionType, transactionType));
+      }
       
       if (location && typeof location === 'string') {
         conditions.push(sql`LOWER(${properties.location}) LIKE LOWER(${'%' + location + '%'})`);
@@ -130,41 +134,12 @@ export function registerRoutes(app: Express): Server {
         .where(conditions.length > 0 ? and(...conditions) : undefined)
         .orderBy(properties.createdAt);
       
+      console.log(`Found ${filteredProperties.length} properties matching criteria`);
       return res.json(filteredProperties);
     } catch (error) {
       console.error("Error fetching properties:", error);
       return res.status(500).json({ 
         message: "Failed to fetch properties" 
-      });
-    }
-  });
-
-  // Get property by ID
-  app.get("/api/properties/detail/:id", async (req, res) => {
-    try {
-      const propertyId = parseInt(req.params.id);
-      
-      if (isNaN(propertyId)) {
-        return res.status(400).json({ 
-          message: "Invalid property ID. Must be a number." 
-        });
-      }
-
-      const property = await db.query.properties.findFirst({
-        where: eq(properties.id, propertyId),
-      });
-      
-      if (!property) {
-        return res.status(404).json({ 
-          message: "Property not found" 
-        });
-      }
-      
-      return res.json(property);
-    } catch (error) {
-      console.error("Error fetching property details:", error);
-      return res.status(500).json({ 
-        message: "Failed to fetch property details" 
       });
     }
   });
