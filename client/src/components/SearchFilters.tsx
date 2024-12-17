@@ -40,17 +40,34 @@ export function SearchFilters({ transactionType }: SearchFiltersProps) {
         transactionType
       };
 
+      console.log('Searching with params:', searchParams);
+
       // Update search params in query client state
       queryClient.setQueryData(['searchParams'], searchParams);
 
-      // Build query key based on all search parameters
-      const queryKey = transactionType 
-        ? [`/api/properties/transaction/${transactionType}`, searchParams] 
-        : ['/api/properties', searchParams];
+      // Invalidate and refetch the properties query
+      if (transactionType) {
+        await queryClient.invalidateQueries({
+          queryKey: [`/api/properties/transaction/${transactionType}`]
+        });
+      } else {
+        await queryClient.invalidateQueries({
+          queryKey: ['/api/properties']
+        });
+      }
 
-      // Invalidate and force refetch
-      await queryClient.invalidateQueries({ queryKey });
-      await queryClient.refetchQueries({ queryKey, type: 'active' });
+      // Force an immediate refetch
+      if (transactionType) {
+        await queryClient.refetchQueries({
+          queryKey: [`/api/properties/transaction/${transactionType}`],
+          exact: true
+        });
+      } else {
+        await queryClient.refetchQueries({
+          queryKey: ['/api/properties'],
+          exact: true
+        });
+      }
     } catch (error) {
       console.error('Erreur lors de la recherche:', error);
     } finally {
