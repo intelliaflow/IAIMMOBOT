@@ -35,12 +35,16 @@ export function AgencyDashboard() {
       const queryString = params.toString();
       const url = `/api/properties/agency${queryString ? `?${queryString}` : ''}`;
       
+      console.log('Fetching agency properties with URL:', url);
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error('Failed to fetch properties');
       }
-      return response.json();
+      const data = await response.json();
+      console.log('Received agency properties:', data);
+      return data;
     },
+    enabled: true,
   });
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);

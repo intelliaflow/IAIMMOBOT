@@ -28,6 +28,11 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
   const [priceRange, setPriceRange] = useState([0, 1000000]);
   const [isSearching, setIsSearching] = useState(false);
 
+  // Store search params in query client cache
+  const updateSearchParams = (params: SearchParams) => {
+    queryClient.setQueryData(['searchParams'], params);
+  };
+
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSearching(true);
@@ -43,6 +48,9 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
       };
 
       console.log('Searching with params:', searchParams);
+      
+      // Update search params in cache
+      updateSearchParams(searchParams);
 
       // Build query string
       const params = new URLSearchParams();
@@ -51,6 +59,7 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
       if (searchParams.rooms) params.append('rooms', searchParams.rooms);
       if (searchParams.minPrice) params.append('minPrice', searchParams.minPrice.toString());
       if (searchParams.maxPrice) params.append('maxPrice', searchParams.maxPrice.toString());
+      if (searchParams.transactionType) params.append('transactionType', searchParams.transactionType);
 
       let results;
       if (transactionType) {
