@@ -7,6 +7,7 @@ import { useQueryClient } from "@tanstack/react-query";
 
 interface SearchFiltersProps {
   transactionType?: 'sale' | 'rent';
+  showTransactionTypeFilter?: boolean;
 }
 
 export interface SearchParams {
@@ -18,11 +19,12 @@ export interface SearchParams {
   transactionType?: 'sale' | 'rent';
 }
 
-export function SearchFilters({ transactionType }: SearchFiltersProps) {
+export function SearchFilters({ transactionType, showTransactionTypeFilter = false }: SearchFiltersProps) {
   const queryClient = useQueryClient();
   const [location, setLocation] = useState("");
   const [propertyType, setPropertyType] = useState<string>();
   const [rooms, setRooms] = useState<string>();
+  const [selectedTransactionType, setSelectedTransactionType] = useState<'sale' | 'rent' | undefined>(transactionType);
   const [priceRange, setPriceRange] = useState([0, 1000000]);
   const [isSearching, setIsSearching] = useState(false);
 
@@ -37,7 +39,7 @@ export function SearchFilters({ transactionType }: SearchFiltersProps) {
         rooms,
         minPrice: priceRange[0],
         maxPrice: priceRange[1],
-        transactionType: transactionType || undefined
+        transactionType: selectedTransactionType || transactionType || undefined
       };
 
       console.log('Searching with params:', searchParams);
@@ -92,7 +94,7 @@ export function SearchFilters({ transactionType }: SearchFiltersProps) {
 
   return (
     <form onSubmit={handleSearch} className="bg-white p-4 rounded-lg shadow">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <div>
           <Input 
             placeholder="Où ? Ville, code postal..." 
@@ -125,6 +127,19 @@ export function SearchFilters({ transactionType }: SearchFiltersProps) {
               <SelectItem value="5">5+ pièces</SelectItem>
             </SelectContent>
           </Select>
+        </div>
+        <div>
+          {showTransactionTypeFilter && (
+            <Select value={selectedTransactionType} onValueChange={setSelectedTransactionType}>
+              <SelectTrigger>
+                <SelectValue placeholder="Type de transaction" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="sale">Vente</SelectItem>
+                <SelectItem value="rent">Location</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
         </div>
         <div>
           <Button type="submit" className="w-full" disabled={isSearching}>

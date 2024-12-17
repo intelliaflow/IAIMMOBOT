@@ -101,7 +101,9 @@ export function AgencyDashboard() {
 
         <TabsContent value="properties">
           <div className="space-y-6">
-            <SearchFilters transactionType={undefined} />
+            <div className="bg-white p-4 rounded-lg shadow">
+              <SearchFilters showTransactionTypeFilter={true} />
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {properties?.map((property) => (
                 <Card key={property.id}>

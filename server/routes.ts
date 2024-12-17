@@ -104,8 +104,7 @@ export function registerRoutes(app: Express): Server {
         .select()
         .from(properties)
         .where(conditions.length > 0 ? and(...conditions) : undefined)
-        .orderBy(properties.createdAt)
-        .limit(6);
+        .orderBy(properties.createdAt);
       
       return res.json(filteredProperties);
     } catch (error) {
