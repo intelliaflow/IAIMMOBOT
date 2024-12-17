@@ -35,36 +35,27 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
     queryClient.setQueryData(['searchParams'], params);
   };
 
-  // Debounced update function for better performance
-  const debouncedUpdate = (params: SearchParams) => {
-    // Clear timeout if it exists
-    const timeoutId = (window as any).searchTimeout;
-    if (timeoutId) {
-      clearTimeout(timeoutId);
-    }
-
-    // Set new timeout
-    (window as any).searchTimeout = setTimeout(() => {
-      updateSearchParams(params);
-      
-      // Log the current search parameters
-      console.log('Updating search params:', params);
-      
-      // Invalidate relevant queries based on context
-      if (onSearch) {
-        // If onSearch callback is provided, let the parent component handle query invalidation
-        onSearch(params);
-      } else {
-        // Otherwise, handle query invalidation here
-        const queries = ['/api/properties'];
-        if (transactionType) {
-          queries.push(`/api/properties/transaction/${transactionType}`);
-        }
-        queries.forEach(query => {
-          queryClient.invalidateQueries({ queryKey: [query] });
-        });
+  // Update function for search parameters
+  const updateSearch = (params: SearchParams) => {
+    updateSearchParams(params);
+    
+    // Log the current search parameters
+    console.log('Updating search params:', params);
+    
+    // Invalidate relevant queries based on context
+    if (onSearch) {
+      // If onSearch callback is provided, let the parent component handle query invalidation
+      onSearch(params);
+    } else {
+      // Otherwise, handle query invalidation here
+      const queries = ['/api/properties'];
+      if (transactionType) {
+        queries.push(`/api/properties/transaction/${transactionType}`);
       }
-    }, 300); // Wait 300ms before triggering search
+      queries.forEach(query => {
+        queryClient.invalidateQueries({ queryKey: [query] });
+      });
+    }
   };
 
   const handleSearch = async (e: React.FormEvent) => {
@@ -83,9 +74,8 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
 
       console.log('Searching with params:', searchParams);
       
-      // Update search params and notify parent component if callback exists
-      debouncedUpdate(searchParams);
-      onSearch?.(searchParams);
+      // Update search params and trigger search immediately
+      updateSearch(searchParams);
 
       // Build query string
       const params = new URLSearchParams();
@@ -151,7 +141,7 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
                 onChange={(e) => {
                   setLocation(e.target.value);
                   if (e.target.value === '') {
-                    debouncedUpdate({
+                    updateSearch({
                       location: undefined,
                       propertyType,
                       rooms,
