@@ -37,7 +37,7 @@ export function SearchFilters({ transactionType }: SearchFiltersProps) {
         rooms,
         minPrice: priceRange[0],
         maxPrice: priceRange[1],
-        transactionType
+        transactionType: transactionType || undefined
       };
 
       console.log('Searching with params:', searchParams);

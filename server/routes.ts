@@ -151,10 +151,14 @@ export function registerRoutes(app: Express): Server {
     try {
       // TODO: Get actual agency ID from session
       const agencyId = 1;
-      const { location, type: propertyType, rooms, minPrice, maxPrice } = req.query;
+      const { location, type: propertyType, rooms, minPrice, maxPrice, transactionType } = req.query;
 
       // Build conditions array
       let conditions: any[] = [eq(properties.agencyId, agencyId)];
+
+      if (transactionType && (transactionType === 'sale' || transactionType === 'rent')) {
+        conditions.push(eq(properties.transactionType, transactionType));
+      }
       
       if (location && typeof location === 'string') {
         conditions.push(sql`LOWER(${properties.location}) LIKE LOWER(${'%' + location + '%'})`);

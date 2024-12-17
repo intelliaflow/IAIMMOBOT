@@ -17,8 +17,29 @@ import { PropertyForm } from "@/components/PropertyForm";
 import type { Property } from "@db/schema";
 
 export function AgencyDashboard() {
-  const { data: properties } = useQuery<Property[]>({
-    queryKey: ["/api/properties/agency"],
+  const queryClient = useQueryClient();
+  const searchParams = queryClient.getQueryData<SearchParams>(['searchParams']) || {};
+  
+  const { data: properties, isLoading } = useQuery<Property[]>({
+    queryKey: ["/api/properties/agency", searchParams],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (searchParams.location) params.append('location', searchParams.location);
+      if (searchParams.propertyType) params.append('type', searchParams.propertyType);
+      if (searchParams.rooms) params.append('rooms', searchParams.rooms);
+      if (searchParams.minPrice) params.append('minPrice', searchParams.minPrice.toString());
+      if (searchParams.maxPrice) params.append('maxPrice', searchParams.maxPrice.toString());
+      if (searchParams.transactionType) params.append('transactionType', searchParams.transactionType);
+
+      const queryString = params.toString();
+      const url = `/api/properties/agency${queryString ? `?${queryString}` : ''}`;
+      
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error('Failed to fetch properties');
+      }
+      return response.json();
+    },
   });
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
