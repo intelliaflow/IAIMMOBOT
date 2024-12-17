@@ -9,6 +9,7 @@ import { useQueryClient } from "@tanstack/react-query";
 interface SearchFiltersProps {
   transactionType?: 'sale' | 'rent';
   showTransactionTypeFilter?: boolean;
+  onSearch?: (params: SearchParams) => void;
 }
 
 export interface SearchParams {
@@ -20,7 +21,7 @@ export interface SearchParams {
   transactionType?: 'sale' | 'rent';
 }
 
-export function SearchFilters({ transactionType, showTransactionTypeFilter = false }: SearchFiltersProps) {
+export function SearchFilters({ transactionType, showTransactionTypeFilter = false, onSearch }: SearchFiltersProps) {
   const queryClient = useQueryClient();
   const [location, setLocation] = useState("");
   const [propertyType, setPropertyType] = useState<string>();
@@ -72,8 +73,9 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
 
       console.log('Searching with params:', searchParams);
       
-      // Update search params in cache and invalidate queries
+      // Update search params and notify parent component if callback exists
       debouncedUpdate(searchParams);
+      onSearch?.(searchParams);
 
       // Build query string
       const params = new URLSearchParams();

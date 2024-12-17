@@ -23,19 +23,23 @@ export function AgencyDashboard() {
   
   const { data: properties, isLoading } = useQuery<Property[]>({
     queryKey: ["/api/properties/agency", searchParams],
-    queryFn: async () => {
+    queryFn: async ({ queryKey }) => {
+      const [_, currentSearchParams] = queryKey;
       const params = new URLSearchParams();
-      if (searchParams.location) params.append('location', searchParams.location);
-      if (searchParams.propertyType) params.append('type', searchParams.propertyType);
-      if (searchParams.rooms) params.append('rooms', searchParams.rooms);
-      if (searchParams.minPrice) params.append('minPrice', searchParams.minPrice.toString());
-      if (searchParams.maxPrice) params.append('maxPrice', searchParams.maxPrice.toString());
-      if (searchParams.transactionType) params.append('transactionType', searchParams.transactionType);
+      
+      if (currentSearchParams?.location) params.append('location', currentSearchParams.location);
+      if (currentSearchParams?.propertyType) params.append('type', currentSearchParams.propertyType);
+      if (currentSearchParams?.rooms) params.append('rooms', currentSearchParams.rooms);
+      if (currentSearchParams?.minPrice) params.append('minPrice', currentSearchParams.minPrice.toString());
+      if (currentSearchParams?.maxPrice) params.append('maxPrice', currentSearchParams.maxPrice.toString());
+      if (currentSearchParams?.transactionType) params.append('transactionType', currentSearchParams.transactionType);
 
       const queryString = params.toString();
       const url = `/api/properties/agency${queryString ? `?${queryString}` : ''}`;
       
       console.log('Fetching agency properties with URL:', url);
+      console.log('Search params:', currentSearchParams);
+      
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error('Failed to fetch properties');
@@ -45,6 +49,8 @@ export function AgencyDashboard() {
       return data;
     },
     enabled: true,
+    staleTime: 1000, // Consider data fresh for 1 second
+    cacheTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
   });
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -106,7 +112,13 @@ export function AgencyDashboard() {
         <TabsContent value="properties">
           <div className="space-y-6">
             <div className="bg-white p-4 rounded-lg shadow">
-              <SearchFilters showTransactionTypeFilter={true} />
+              <SearchFilters 
+                showTransactionTypeFilter={true}
+                onSearch={(params) => {
+                  queryClient.setQueryData(['searchParams'], params);
+                  queryClient.invalidateQueries({ queryKey: ['/api/properties/agency'] });
+                }}
+              />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {properties?.map((property) => (
