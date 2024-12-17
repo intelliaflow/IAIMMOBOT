@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { db } from "@db";
 import { properties, documents } from "@db/schema";
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and, sql, gte } from "drizzle-orm";
 
 export function registerRoutes(app: Express): Server {
   const httpServer = createServer(app);
@@ -41,7 +41,13 @@ export function registerRoutes(app: Express): Server {
       }
       
       if (rooms && !isNaN(parseInt(rooms as string))) {
-        conditions.push(eq(properties.bedrooms, parseInt(rooms as string)));
+        const roomsValue = parseInt(rooms as string);
+        if (roomsValue === 5) {
+          // Pour 5+, on utilise gte (greater than or equal)
+          conditions.push(gte(properties.bedrooms, 5));
+        } else {
+          conditions.push(eq(properties.bedrooms, roomsValue));
+        }
       }
       
       if (minPrice && !isNaN(parseInt(minPrice as string))) {
@@ -87,7 +93,13 @@ export function registerRoutes(app: Express): Server {
       }
       
       if (rooms && !isNaN(parseInt(rooms as string))) {
-        conditions.push(eq(properties.bedrooms, parseInt(rooms as string)));
+        const roomsValue = parseInt(rooms as string);
+        if (roomsValue === 5) {
+          // Pour 5+, on utilise gte (greater than or equal)
+          conditions.push(gte(properties.bedrooms, 5));
+        } else {
+          conditions.push(eq(properties.bedrooms, roomsValue));
+        }
       }
       
       if (minPrice && !isNaN(parseInt(minPrice as string))) {
@@ -168,7 +180,13 @@ export function registerRoutes(app: Express): Server {
       }
       
       if (rooms && !isNaN(parseInt(rooms as string))) {
-        conditions.push(eq(properties.bedrooms, parseInt(rooms as string)));
+        const roomsValue = parseInt(rooms as string);
+        if (roomsValue === 5) {
+          // Pour 5+, on utilise gte (greater than or equal)
+          conditions.push(gte(properties.bedrooms, 5));
+        } else {
+          conditions.push(eq(properties.bedrooms, roomsValue));
+        }
       }
       
       if (minPrice && !isNaN(parseInt(minPrice as string))) {
