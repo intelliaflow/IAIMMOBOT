@@ -18,7 +18,7 @@ function handleRoomsFilter(rooms: string | undefined) {
   // Gestion spéciale pour 5+ pièces
   if (roomsValue === 5) {
     console.log('Filtering for 5+ pièces');
-    return gte(properties.bedrooms, 5);
+    return sql`${properties.bedrooms} >= 5`;
   }
   
   // Pour tous les autres cas, utiliser l'égalité exacte

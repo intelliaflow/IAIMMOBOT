@@ -74,50 +74,24 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
 
       console.log('Searching with params:', searchParams);
       
-      // Update search params and trigger search immediately
-      updateSearch(searchParams);
-
-      // Build query string
-      const params = new URLSearchParams();
-      if (searchParams.location) params.append('location', searchParams.location);
-      if (searchParams.propertyType) params.append('type', searchParams.propertyType);
-      if (searchParams.rooms) params.append('rooms', searchParams.rooms);
-      if (searchParams.minPrice) params.append('minPrice', searchParams.minPrice.toString());
-      if (searchParams.maxPrice) params.append('maxPrice', searchParams.maxPrice.toString());
-      if (searchParams.transactionType) params.append('transactionType', searchParams.transactionType);
-
-      let results;
-      if (transactionType) {
-        // Effectuer la recherche filtrée par type de transaction
-        const response = await fetch(
-          `/api/properties/transaction/${transactionType}?${params.toString()}`
-        );
-
-        if (!response.ok) {
-          throw new Error('Erreur lors de la recherche');
-        }
-
-        results = await response.json();
-        console.log('Search results:', results);
-
-        // Mettre à jour le cache avec les nouveaux résultats
-        queryClient.setQueryData(
-          [`/api/properties/transaction/${transactionType}`],
-          results
-        );
+      // Mettre à jour les paramètres de recherche dans le cache
+      queryClient.setQueryData(['searchParams'], searchParams);
+      
+      // Invalider les requêtes pertinentes pour forcer un rechargement
+      if (onSearch) {
+        onSearch(searchParams);
       } else {
-        // Sur la page d'accueil, utiliser l'API générale
-        const response = await fetch(`/api/properties?${params.toString()}`);
-
-        if (!response.ok) {
-          throw new Error('Erreur lors de la recherche');
+        queryClient.invalidateQueries({ 
+          queryKey: ['/api/properties'],
+          exact: true
+        });
+        
+        if (transactionType) {
+          queryClient.invalidateQueries({ 
+            queryKey: [`/api/properties/transaction/${transactionType}`],
+            exact: true
+          });
         }
-
-        results = await response.json();
-        console.log('Search results:', results);
-
-        // Mettre à jour le cache avec les nouveaux résultats
-        queryClient.setQueryData(['/api/properties'], results);
       }
     } catch (error) {
       console.error('Erreur lors de la recherche:', error);
