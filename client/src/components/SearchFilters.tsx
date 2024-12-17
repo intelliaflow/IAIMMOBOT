@@ -24,32 +24,42 @@ export function SearchFilters({ transactionType }: SearchFiltersProps) {
   const [propertyType, setPropertyType] = useState<string>();
   const [rooms, setRooms] = useState<string>();
   const [priceRange, setPriceRange] = useState([0, 1000000]);
+  const [isSearching, setIsSearching] = useState(false);
 
-  const handleSearch = async () => {
-    const searchParams: SearchParams = {
-      location: location || undefined,
-      propertyType,
-      rooms,
-      minPrice: priceRange[0],
-      maxPrice: priceRange[1],
-      transactionType
-    };
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSearching(true);
 
-    // Update search params in query client state
-    queryClient.setQueryData(['searchParams'], searchParams);
+    try {
+      const searchParams: SearchParams = {
+        location: location || undefined,
+        propertyType,
+        rooms,
+        minPrice: priceRange[0],
+        maxPrice: priceRange[1],
+        transactionType
+      };
 
-    // Build query key based on all search parameters
-    const queryKey = transactionType 
-      ? [`/api/properties/transaction/${transactionType}`, searchParams] 
-      : ['/api/properties', searchParams];
+      // Update search params in query client state
+      queryClient.setQueryData(['searchParams'], searchParams);
 
-    // Invalidate and force refetch
-    await queryClient.invalidateQueries({ queryKey });
-    await queryClient.refetchQueries({ queryKey, type: 'active' });
+      // Build query key based on all search parameters
+      const queryKey = transactionType 
+        ? [`/api/properties/transaction/${transactionType}`, searchParams] 
+        : ['/api/properties', searchParams];
+
+      // Invalidate and force refetch
+      await queryClient.invalidateQueries({ queryKey });
+      await queryClient.refetchQueries({ queryKey, type: 'active' });
+    } catch (error) {
+      console.error('Erreur lors de la recherche:', error);
+    } finally {
+      setIsSearching(false);
+    }
   };
 
   return (
-    <div className="bg-white p-4 rounded-lg shadow">
+    <form onSubmit={handleSearch} className="bg-white p-4 rounded-lg shadow">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div>
           <Input 
@@ -85,8 +95,8 @@ export function SearchFilters({ transactionType }: SearchFiltersProps) {
           </Select>
         </div>
         <div>
-          <Button className="w-full" onClick={handleSearch}>
-            Rechercher
+          <Button type="submit" className="w-full" disabled={isSearching}>
+            {isSearching ? "Recherche en cours..." : "Rechercher"}
           </Button>
         </div>
       </div>
@@ -102,6 +112,6 @@ export function SearchFilters({ transactionType }: SearchFiltersProps) {
           onValueChange={setPriceRange}
         />
       </div>
-    </div>
+    </form>
   );
 }
