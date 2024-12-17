@@ -15,17 +15,15 @@ function handleRoomsFilter(rooms: string | undefined) {
     return null;
   }
 
-  // Gestion spéciale pour Studio (1 pièce) et 5+ pièces
-  if (roomsValue === 1) {
-    console.log('Filtering for Studio/1 pièce');
-    return eq(properties.bedrooms, 1);
-  } else if (roomsValue === 5) {
+  // Gestion spéciale pour 5+ pièces
+  if (roomsValue === 5) {
     console.log('Filtering for 5+ pièces');
     return gte(properties.bedrooms, 5);
-  } else {
-    console.log('Filtering for exact number of rooms:', roomsValue);
-    return eq(properties.bedrooms, roomsValue);
   }
+  
+  // Pour tous les autres cas, utiliser l'égalité exacte
+  console.log('Filtering for exact number of rooms:', roomsValue);
+  return eq(properties.bedrooms, roomsValue);
 }
 
 export function registerRoutes(app: Express): Server {
