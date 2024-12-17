@@ -240,5 +240,23 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Upload property images
+  app.post("/api/properties/images", async (req, res) => {
+    try {
+      // TODO: Implement proper file storage
+      // For now, we'll just return fake image URLs
+      const imageUrls = Array.from({ length: req.body.count || 1 }, (_, i) => 
+        `https://picsum.photos/seed/${Math.random()}/${800 + i}/${600 + i}`
+      );
+      
+      return res.json({ urls: imageUrls });
+    } catch (error) {
+      console.error("Error uploading images:", error);
+      return res.status(500).json({ 
+        message: "Failed to upload images" 
+      });
+    }
+  });
+
   return httpServer;
 }

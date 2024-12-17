@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -8,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { X } from "lucide-react";
 
 const propertySchema = z.object({
   title: z.string().min(1, "Le titre est requis"),
@@ -33,6 +35,9 @@ interface PropertyFormProps {
 export function PropertyForm({ property, onSuccess }: PropertyFormProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [selectedImages, setSelectedImages] = useState<File[]>([]);
+  const [uploadedImageUrls, setUploadedImageUrls] = useState<string[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
 
   const form = useForm<PropertyFormValues>({
     resolver: zodResolver(propertySchema),
@@ -118,7 +123,50 @@ export function PropertyForm({ property, onSuccess }: PropertyFormProps) {
     },
   });
 
-  function onSubmit(data: PropertyFormValues) {
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files) return;
+
+    setIsUploading(true);
+    setSelectedImages(prev => [...prev, ...Array.from(files)]);
+
+    try {
+      const response = await fetch('/api/properties/images', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ count: files.length }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to upload images');
+      }
+
+      const { urls } = await response.json();
+      setUploadedImageUrls(prev => [...prev, ...urls]);
+      
+      // Update form with new image URLs
+      const currentImages = form.getValues('images') || [];
+      form.setValue('images', [...currentImages, ...urls]);
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de télécharger les images",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const removeImage = (index: number) => {
+    const currentImages = form.getValues('images') || [];
+    const newImages = currentImages.filter((_, i) => i !== index);
+    form.setValue('images', newImages);
+    setUploadedImageUrls(prev => prev.filter((_, i) => i !== index));
+    setSelectedImages(prev => prev.filter((_, i) => i !== index));
+  };
+
+  async function onSubmit(data: PropertyFormValues) {
     if (property) {
       updateProperty.mutate(data);
     } else {
@@ -278,13 +326,54 @@ export function PropertyForm({ property, onSuccess }: PropertyFormProps) {
           />
         </div>
 
-        <Button 
-          type="submit" 
-          disabled={createProperty.isPending || updateProperty.isPending}
-          className="w-full"
-        >
-          {property ? "Modifier le bien" : "Créer le bien"}
-        </Button>
+        <div className="space-y-4">
+          <FormItem>
+            <FormLabel>Images</FormLabel>
+            <FormControl>
+              <div className="space-y-4">
+                {/* Prévisualisation des images */}
+                {(form.getValues('images') || []).length > 0 && (
+                  <div className="grid grid-cols-3 gap-4">
+                    {form.getValues('images')?.map((url, index) => (
+                      <div key={url} className="relative group">
+                        <img
+                          src={url}
+                          alt={`Image ${index + 1}`}
+                          className="w-full h-32 object-cover rounded-lg"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeImage(index)}
+                          className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                {/* Input pour télécharger de nouvelles images */}
+                <Input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleImageUpload}
+                  disabled={isUploading}
+                />
+              </div>
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+
+          <Button 
+            type="submit" 
+            disabled={createProperty.isPending || updateProperty.isPending || isUploading}
+            className="w-full"
+          >
+            {isUploading ? "Téléchargement des images..." : property ? "Modifier le bien" : "Créer le bien"}
+          </Button>
+        </div>
       </form>
     </Form>
   );
