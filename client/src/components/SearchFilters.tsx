@@ -36,10 +36,24 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
 
   // Debounced update function for better performance
   const debouncedUpdate = (params: SearchParams) => {
-    updateSearchParams(params);
-    queryClient.invalidateQueries({ queryKey: ['/api/properties'] });
-    queryClient.invalidateQueries({ queryKey: ['/api/properties/agency'] });
-    queryClient.invalidateQueries({ queryKey: ['/api/properties/transaction'] });
+    // Clear timeout if it exists
+    const timeoutId = (window as any).searchTimeout;
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+
+    // Set new timeout
+    (window as any).searchTimeout = setTimeout(() => {
+      updateSearchParams(params);
+      // Invalidate relevant queries based on context
+      const queries = ['/api/properties'];
+      if (transactionType) {
+        queries.push(`/api/properties/transaction/${transactionType}`);
+      }
+      queries.forEach(query => {
+        queryClient.invalidateQueries({ queryKey: [query, params] });
+      });
+    }, 300); // Wait 300ms before triggering search
   };
 
   const handleSearch = async (e: React.FormEvent) => {
@@ -111,85 +125,109 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
   };
 
   return (
-    <form onSubmit={handleSearch} className="bg-white p-4 rounded-lg shadow">
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <div className="space-y-2">
-          <Label>Localisation</Label>
-          <Input 
-            placeholder="Ville, code postal..." 
-            value={location}
-            onChange={(e) => {
-              setLocation(e.target.value);
-              // Auto-update after 500ms of no typing
-              if (e.target.value === '') {
-                debouncedUpdate({
-                  location: undefined,
-                  propertyType,
-                  rooms,
-                  minPrice: priceRange[0],
-                  maxPrice: priceRange[1],
-                  transactionType: selectedTransactionType || transactionType
-                });
-              }
-            }}
+    <form onSubmit={handleSearch} className="bg-white p-4 rounded-lg shadow-md">
+      <div className="space-y-6">
+        {/* Section Localisation */}
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="location">Où souhaitez-vous chercher ?</Label>
+              <Input 
+                id="location"
+                placeholder="Saisissez une ville ou un code postal" 
+                value={location}
+                onChange={(e) => {
+                  setLocation(e.target.value);
+                  if (e.target.value === '') {
+                    debouncedUpdate({
+                      location: undefined,
+                      propertyType,
+                      rooms,
+                      minPrice: priceRange[0],
+                      maxPrice: priceRange[1],
+                      transactionType: selectedTransactionType || transactionType
+                    });
+                  }
+                }}
+                className="w-full"
+              />
+            </div>
+
+            {showTransactionTypeFilter && (
+              <div className="space-y-2">
+                <Label htmlFor="transactionType">Type de transaction</Label>
+                <Select value={selectedTransactionType} onValueChange={setSelectedTransactionType}>
+                  <SelectTrigger id="transactionType">
+                    <SelectValue placeholder="Choisir (vente/location)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="sale">Vente</SelectItem>
+                    <SelectItem value="rent">Location</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Section Caractéristiques */}
+        <div className="space-y-4">
+          <h3 className="text-sm font-medium text-gray-700">Caractéristiques</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="propertyType">Type de bien</Label>
+              <Select value={propertyType} onValueChange={setPropertyType}>
+                <SelectTrigger id="propertyType">
+                  <SelectValue placeholder="Choisir un type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="apartment">Appartement</SelectItem>
+                  <SelectItem value="house">Maison</SelectItem>
+                  <SelectItem value="villa">Villa</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="rooms">Nombre de pièces</Label>
+              <Select value={rooms} onValueChange={setRooms}>
+                <SelectTrigger id="rooms">
+                  <SelectValue placeholder="Choisir" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">Studio</SelectItem>
+                  <SelectItem value="2">2 pièces</SelectItem>
+                  <SelectItem value="3">3 pièces</SelectItem>
+                  <SelectItem value="4">4 pièces</SelectItem>
+                  <SelectItem value="5">5+ pièces</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </div>
+
+        {/* Section Budget */}
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <Label>Budget</Label>
+            <span className="text-sm text-gray-600">
+              {priceRange[0].toLocaleString()}€ - {priceRange[1].toLocaleString()}€
+            </span>
+          </div>
+          <Slider
+            defaultValue={[0, 1000000]}
+            max={1000000}
+            step={10000}
+            value={priceRange}
+            onValueChange={setPriceRange}
+            className="my-4"
           />
         </div>
-        <div>
-          <Select value={propertyType} onValueChange={setPropertyType}>
-            <SelectTrigger>
-              <SelectValue placeholder="Type de bien" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="apartment">Appartement</SelectItem>
-              <SelectItem value="house">Maison</SelectItem>
-              <SelectItem value="villa">Villa</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <Select value={rooms} onValueChange={setRooms}>
-            <SelectTrigger>
-              <SelectValue placeholder="Nombre de pièces" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="1">Studio</SelectItem>
-              <SelectItem value="2">2 pièces</SelectItem>
-              <SelectItem value="3">3 pièces</SelectItem>
-              <SelectItem value="4">4 pièces</SelectItem>
-              <SelectItem value="5">5+ pièces</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          {showTransactionTypeFilter && (
-            <Select value={selectedTransactionType} onValueChange={setSelectedTransactionType}>
-              <SelectTrigger>
-                <SelectValue placeholder="Type de transaction" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="sale">Vente</SelectItem>
-                <SelectItem value="rent">Location</SelectItem>
-              </SelectContent>
-            </Select>
-          )}
-        </div>
-        <div>
-          <Button type="submit" className="w-full" disabled={isSearching}>
-            {isSearching ? "Recherche en cours..." : "Rechercher"}
-          </Button>
-        </div>
-      </div>
-      <div className="mt-4">
-        <label className="text-sm text-gray-600 mb-2 block">
-          Budget : {priceRange[0].toLocaleString()}€ - {priceRange[1].toLocaleString()}€
-        </label>
-        <Slider
-          defaultValue={[0, 1000000]}
-          max={1000000}
-          step={10000}
-          value={priceRange}
-          onValueChange={setPriceRange}
-        />
+
+        {/* Bouton de recherche */}
+        <Button type="submit" className="w-full" disabled={isSearching}>
+          {isSearching ? "Recherche en cours..." : "Lancer la recherche"}
+        </Button>
       </div>
     </form>
   );
