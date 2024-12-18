@@ -7,10 +7,10 @@ export function RentProperties() {
 
   const handleSearch = (params: SearchParams) => {
     console.log('Search triggered in RentProperties with params:', params);
+    // Force React Query to refetch with new parameters
     queryClient.setQueryData(['searchParams'], params);
     queryClient.invalidateQueries({ 
-      queryKey: [`/api/properties/transaction/rent`, params],
-      exact: true
+      queryKey: [`/api/properties/transaction/rent`]
     });
   };
 

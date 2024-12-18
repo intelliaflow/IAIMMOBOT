@@ -7,10 +7,10 @@ export function SaleProperties() {
 
   const handleSearch = (params: SearchParams) => {
     console.log('Search triggered in SaleProperties with params:', params);
+    // Force React Query to refetch with new parameters
     queryClient.setQueryData(['searchParams'], params);
     queryClient.invalidateQueries({ 
-      queryKey: [`/api/properties/transaction/sale`, params],
-      exact: true
+      queryKey: [`/api/properties/transaction/sale`]
     });
   };
 

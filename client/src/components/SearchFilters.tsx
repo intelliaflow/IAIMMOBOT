@@ -34,58 +34,57 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
   const [isSearching, setIsSearching] = useState(false);
   const { toast } = useToast();
 
-  // Fonction de recherche
-  const handleSearch = async (e: React.FormEvent) => {
+  // Fonction de recherche simplifiée
+  const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSearching(true);
+    
+    // Construction des paramètres de recherche
+    const searchParams: SearchParams = {};
+    
+    if (location?.trim()) {
+      searchParams.location = location.trim();
+    }
+    
+    if (propertyType) {
+      searchParams.propertyType = propertyType;
+    }
+    
+    if (rooms) {
+      searchParams.rooms = rooms;
+    }
+    
+    if (priceRange[0] > 0) {
+      searchParams.minPrice = priceRange[0];
+    }
+    
+    if (priceRange[1] < 1000000) {
+      searchParams.maxPrice = priceRange[1];
+    }
+    
+    if (selectedTransactionType || transactionType) {
+      searchParams.transactionType = selectedTransactionType || transactionType;
+    }
 
-    try {
-      // Construction des paramètres de recherche
-      const searchParams: SearchParams = {};
-      
-      if (location?.trim()) {
-        searchParams.location = location.trim();
-      }
-      
-      if (propertyType) {
-        searchParams.propertyType = propertyType;
-      }
-      
-      if (rooms) {
-        searchParams.rooms = rooms;
-      }
-      
-      if (priceRange[0] > 0) {
-        searchParams.minPrice = priceRange[0];
-      }
-      
-      if (priceRange[1] < 1000000) {
-        searchParams.maxPrice = priceRange[1];
-      }
-      
-      if (selectedTransactionType || transactionType) {
-        searchParams.transactionType = selectedTransactionType || transactionType;
-      }
-
-      console.log('Recherche avec les paramètres:', searchParams);
-      
-      if (onSearch) {
+    console.log('Recherche avec les paramètres:', searchParams);
+    
+    if (onSearch) {
+      setIsSearching(true);
+      try {
         onSearch(searchParams);
+        toast({
+          title: "Recherche effectuée",
+          description: "Les résultats ont été mis à jour",
+        });
+      } catch (error) {
+        console.error('Erreur lors de la recherche:', error);
+        toast({
+          title: "Erreur",
+          description: "Une erreur est survenue lors de la recherche",
+          variant: "destructive",
+        });
+      } finally {
+        setIsSearching(false);
       }
-
-      toast({
-        title: "Recherche effectuée",
-        description: "Les résultats ont été mis à jour",
-      });
-    } catch (error) {
-      console.error('Erreur lors de la recherche:', error);
-      toast({
-        title: "Erreur",
-        description: "Une erreur est survenue lors de la recherche",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSearching(false);
     }
   };
 

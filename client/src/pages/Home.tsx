@@ -58,10 +58,10 @@ export function Home() {
               showTransactionTypeFilter={true}
               onSearch={(params) => {
                 console.log('Search triggered in Home with params:', params);
+                // Force React Query to refetch with new parameters
                 queryClient.setQueryData(['searchParams'], params);
                 queryClient.invalidateQueries({ 
-                  queryKey: ['/api/properties', params],
-                  exact: true
+                  queryKey: ['/api/properties']
                 });
               }}
             />
