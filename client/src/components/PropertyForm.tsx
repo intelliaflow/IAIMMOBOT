@@ -277,9 +277,27 @@ export function PropertyForm({ property, onSuccess }: PropertyFormProps) {
               <FormItem>
                 <FormLabel>Localisation</FormLabel>
                 <FormControl>
-                  <Input placeholder="Ville, code postal" {...field} />
+                  <Input 
+                    placeholder="Numéro, rue, code postal, ville" 
+                    {...field}
+                    onChange={(e) => {
+                      // Format address to ensure good geocoding
+                      const value = e.target.value;
+                      let formattedValue = value;
+                      
+                      // If address doesn't end with ", France", add it
+                      if (!value.toLowerCase().trim().endsWith('france')) {
+                        formattedValue = value.trim() + ', France';
+                      }
+                      
+                      field.onChange(formattedValue);
+                    }}
+                  />
                 </FormControl>
                 <FormMessage />
+                <p className="text-sm text-muted-foreground">
+                  Format: 123 rue Example, 75001 Paris, France
+                </p>
               </FormItem>
             )}
           />

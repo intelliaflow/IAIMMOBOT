@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { db } from "@db";
 import { properties, documents } from "@db/schema";
 import { eq, and, sql, desc } from "drizzle-orm";
-import { geocodeAddress } from "../client/src/lib/geocoding";
+import { geocodeAddress, batchGeocodeAddresses } from "../client/src/lib/geocoding";
 
 // Helper function to handle rooms filter
 function handleRoomsFilter(rooms: string | undefined) {
@@ -207,7 +207,6 @@ export function registerRoutes(app: Express): Server {
         ...req.body,
         agencyId,
         createdAt: new Date(),
-        updatedAt: new Date()
       };
 
       // Géocode l'adresse avec plusieurs tentatives
@@ -270,7 +269,6 @@ export function registerRoutes(app: Express): Server {
         .update(properties)
         .set({
           ...req.body,
-          updatedAt: new Date()
         })
         .where(eq(properties.id, propertyId))
         .returning();
@@ -348,7 +346,6 @@ export function registerRoutes(app: Express): Server {
             .set({
               latitude: coordinates.lat,
               longitude: coordinates.lon,
-              updatedAt: new Date()
             })
             .where(eq(properties.id, property.id));
           updatedCount++;

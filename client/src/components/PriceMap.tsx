@@ -5,19 +5,16 @@ import 'leaflet/dist/leaflet.css';
 import type { Property } from '@db/schema';
 import { Badge } from "@/components/ui/badge";
 import { Link } from "wouter";
-import type { LatLngExpression } from 'leaflet';
-
-// Fix for leaflet default marker icons
+import type { Icon, LatLngTuple } from 'leaflet';
 import L from 'leaflet';
-import icon from 'leaflet/dist/images/marker-icon.png';
-import iconShadow from 'leaflet/dist/images/marker-shadow.png';
 
-const DefaultIcon = L.icon({
-  iconUrl: icon,
-  shadowUrl: iconShadow,
+const DefaultIcon: Icon = L.icon({
+  iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
   iconSize: [25, 41],
   iconAnchor: [12, 41],
-  popupAnchor: [1, -34]
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
 });
 
 L.Marker.prototype.options.icon = DefaultIcon;
@@ -32,38 +29,17 @@ interface PropertyMarker extends Property {
 
 export function PriceMap({ properties }: PriceMapProps) {
   // Default to France center coordinates
-  const center: LatLngExpression = [46.603354, 1.888334];
+  const center: LatLngTuple = [46.603354, 1.888334];
   
   const markersData = useMemo(() => {
-    return properties.map(property => {
-      // Si les coordonnées sont disponibles, les utiliser
-      if (property.latitude && property.longitude) {
-        return {
-          ...property,
-          position: [
-            parseFloat(property.latitude),
-            parseFloat(property.longitude)
-          ] as [number, number]
-        };
-      }
-      
-      // Sinon, générer des coordonnées approximatives pour la France
-      // Cela permet d'avoir une visualisation en attendant le géocodage
-      const franceBounds = {
-        north: 51.089167, // Latitude max France
-        south: 42.333333, // Latitude min France
-        east: 8.233333,   // Longitude max France
-        west: -4.795556   // Longitude min France
-      };
-      
-      return {
+    return properties.filter(property => property.latitude && property.longitude)
+      .map(property => ({
         ...property,
         position: [
-          franceBounds.south + Math.random() * (franceBounds.north - franceBounds.south),
-          franceBounds.west + Math.random() * (franceBounds.east - franceBounds.west)
-        ] as [number, number]
-      };
-    });
+          parseFloat(property.latitude!),
+          parseFloat(property.longitude!)
+        ] as LatLngTuple
+      }));
   }, [properties]);
 
   return (
@@ -73,6 +49,7 @@ export function PriceMap({ properties }: PriceMapProps) {
         zoom={6}
         scrollWheelZoom={true}
         style={{ height: "100%", width: "100%" }}
+        className="z-0"
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'

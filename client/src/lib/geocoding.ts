@@ -24,13 +24,23 @@ export async function geocodeAddress(address: string): Promise<{ lat: string; lo
     // Add a small delay to respect API rate limits
     await delay(1000);
 
-    const encodedAddress = encodeURIComponent(address);
+    // Format address to ensure it includes "France"
+    const formattedAddress = address.toLowerCase().includes('france') 
+      ? address 
+      : `${address}, France`;
+    
+    const encodedAddress = encodeURIComponent(formattedAddress);
     const response = await fetch(
-      `https://nominatim.openstreetmap.org/search?format=json&q=${encodedAddress}&countrycodes=fr`,
+      `https://nominatim.openstreetmap.org/search?` + 
+      `format=json&` +
+      `q=${encodedAddress}&` +
+      `countrycodes=fr&` +
+      `addressdetails=1&` + // Get detailed address info
+      `limit=1`, // Get only the best match
       {
         headers: {
-          'User-Agent': 'IAImmo/1.0', // Required by Nominatim's ToS
-          'Accept-Language': 'fr' // Prefer French results
+          'User-Agent': 'IAImmo/1.0',
+          'Accept-Language': 'fr'
         }
       }
     );
@@ -46,11 +56,25 @@ export async function geocodeAddress(address: string): Promise<{ lat: string; lo
 
     const data = await response.json();
     if (!data.length) {
-      console.warn('No coordinates found for address:', address);
+      console.warn('No coordinates found for address:', formattedAddress);
       return null;
     }
 
-    const result = geocodingResultSchema.parse(data[0]);
+    const result = data[0];
+    
+    // Validate that the result is in France and has good accuracy
+    if (result.address?.country_code?.toLowerCase() !== 'fr') {
+      console.warn('Result not in France:', formattedAddress);
+      return null;
+    }
+
+    // Check if we have a precise enough result
+    const importance = parseFloat(result.importance || '0');
+    if (importance < 0.5) {
+      console.warn('Result not precise enough:', formattedAddress, 'importance:', importance);
+      return null;
+    }
+
     const coordinates = {
       lat: result.lat,
       lon: result.lon
@@ -59,7 +83,7 @@ export async function geocodeAddress(address: string): Promise<{ lat: string; lo
     // Cache the result
     geocodingCache.set(address, coordinates);
 
-    console.log('Successfully geocoded:', address, coordinates);
+    console.log('Successfully geocoded:', formattedAddress, coordinates);
     return coordinates;
   } catch (error) {
     console.error('Geocoding error for address:', address, error);
