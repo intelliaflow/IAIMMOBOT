@@ -10,22 +10,22 @@ export function Home() {
 
   const { data: properties, isLoading } = useQuery<Property[]>({
     queryKey: ["/api/properties", searchParams],
-    queryFn: async ({ queryKey }) => {
-      const [_, params] = queryKey;
+    queryFn: async () => {
       const urlParams = new URLSearchParams();
+      const currentParams = queryClient.getQueryData<SearchParams>(['searchParams']) || {};
       
-      if (params?.location) urlParams.append('location', params.location);
-      if (params?.propertyType) urlParams.append('type', params.propertyType);
-      if (params?.rooms) urlParams.append('rooms', params.rooms);
-      if (params?.minPrice) urlParams.append('minPrice', params.minPrice.toString());
-      if (params?.maxPrice) urlParams.append('maxPrice', params.maxPrice.toString());
-      if (params?.transactionType) urlParams.append('transactionType', params.transactionType);
+      if (currentParams.location) urlParams.append('location', currentParams.location);
+      if (currentParams.propertyType) urlParams.append('type', currentParams.propertyType);
+      if (currentParams.rooms) urlParams.append('rooms', currentParams.rooms);
+      if (currentParams.minPrice) urlParams.append('minPrice', currentParams.minPrice.toString());
+      if (currentParams.maxPrice) urlParams.append('maxPrice', currentParams.maxPrice.toString());
+      if (currentParams.transactionType) urlParams.append('transactionType', currentParams.transactionType);
 
       const queryString = urlParams.toString();
       const url = `/api/properties${queryString ? `?${queryString}` : ''}`;
       
       console.log('Fetching properties with URL:', url);
-      console.log('Search params:', params);
+      console.log('Search params:', currentParams);
       
       const response = await fetch(url);
       if (!response.ok) {
