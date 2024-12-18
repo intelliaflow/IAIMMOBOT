@@ -391,15 +391,18 @@ export function registerRoutes(app: Express): Server {
   app.get("/api/properties/geocode-missing", async (req, res) => {
     try {
       // Récupérer les propriétés sans coordonnées valides
+      // Récupérer les propriétés sans coordonnées valides
       const propertiesWithoutCoords = await db
         .select()
         .from(properties)
         .where(
           sql`${properties.latitude} IS NULL OR 
               ${properties.longitude} IS NULL OR
-              ${properties.latitude} = '' OR 
-              ${properties.longitude} = ''`
+              TRIM(${properties.latitude}) = '' OR 
+              TRIM(${properties.longitude}) = ''`
         );
+
+      console.log("Properties without coordinates:", propertiesWithoutCoords);
 
       if (!propertiesWithoutCoords || propertiesWithoutCoords.length === 0) {
         return res.json({
@@ -440,10 +443,15 @@ export function registerRoutes(app: Express): Server {
             await db
               .update(properties)
               .set({
-                latitude: coordinates.lat,
-                longitude: coordinates.lon
+                latitude: coordinates.lat.toString(),
+                longitude: coordinates.lon.toString()
               })
               .where(eq(properties.id, property.id));
+
+            console.log(`Successfully updated coordinates for property ${property.id}:`, {
+              latitude: coordinates.lat,
+              longitude: coordinates.lon
+            });
             
             console.log(`Updated property ${property.id} with coordinates:`, coordinates);
             updatedCount++;
