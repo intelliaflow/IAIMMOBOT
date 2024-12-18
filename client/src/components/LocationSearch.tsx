@@ -1,22 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useDebounce } from "use-debounce";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { MapPin, Loader2 } from "lucide-react";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
 import type { AddressFeature, AddressResponse } from "@/lib/types/address";
+import { cn } from "@/lib/utils";
 
 interface LocationSearchProps {
   value: string;
@@ -31,11 +19,12 @@ export function LocationSearch({
   className,
   onLocationSelect 
 }: LocationSearchProps) {
-  const [open, setOpen] = useState(false);
   const [inputValue, setInputValue] = useState(value || "");
   const [debouncedValue] = useDebounce(inputValue, 500);
   const [suggestions, setSuggestions] = useState<AddressFeature[]>([]);
   const [loading, setLoading] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const wrapperRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchSuggestions = async () => {
@@ -57,6 +46,7 @@ export function LocationSearch({
 
         const data: AddressResponse = await response.json();
         setSuggestions(data.features || []);
+        setShowSuggestions(true);
       } catch (error) {
         console.error("Erreur lors de la recherche d'adresses:", error);
         setSuggestions([]);
@@ -68,6 +58,17 @@ export function LocationSearch({
     fetchSuggestions();
   }, [debouncedValue]);
 
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
+        setShowSuggestions(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   const handleSelect = (feature: AddressFeature) => {
     const selectedValue = feature.properties.label;
     setInputValue(selectedValue);
@@ -75,7 +76,7 @@ export function LocationSearch({
     if (onLocationSelect) {
       onLocationSelect(feature);
     }
-    setOpen(false);
+    setShowSuggestions(false);
   };
 
   const handleGeolocation = () => {
@@ -115,64 +116,46 @@ export function LocationSearch({
   };
 
   return (
-    <div className={cn("flex gap-2", className)}>
-      <Popover 
-        open={open} 
-        onOpenChange={(isOpen) => {
-          // Ne pas fermer le Popover si l'input a le focus
-          if (!isOpen && document.activeElement === document.querySelector('input')) {
-            return;
-          }
-          setOpen(isOpen);
-        }}
-      >
-        <PopoverTrigger asChild>
-          <div className="relative w-full">
-            <Input
-              value={inputValue}
-              onChange={(e) => {
-                setInputValue(e.target.value);
-                if (!open) setOpen(true);
-              }}
-              onFocus={() => setOpen(true)}
-              placeholder="Rechercher une adresse..."
-              className="w-full pr-8"
-            />
-            {loading && (
-              <div className="absolute right-2 top-1/2 -translate-y-1/2">
-                <Loader2 className="h-4 w-4 animate-spin" />
-              </div>
-            )}
+    <div className={cn("flex gap-2", className)} ref={wrapperRef}>
+      <div className="relative flex-1">
+        <Input
+          value={inputValue}
+          onChange={(e) => {
+            setInputValue(e.target.value);
+            setShowSuggestions(true);
+          }}
+          onFocus={() => setShowSuggestions(true)}
+          placeholder="Rechercher une adresse..."
+          className="w-full pr-8"
+        />
+        {loading && (
+          <div className="absolute right-2 top-1/2 -translate-y-1/2">
+            <Loader2 className="h-4 w-4 animate-spin" />
           </div>
-        </PopoverTrigger>
-        <PopoverContent className="w-full p-0" align="start">
-          <Command>
-            <CommandList>
-              {suggestions.length === 0 ? (
-                <CommandEmpty>Aucune suggestion trouvée</CommandEmpty>
-              ) : (
-                <CommandGroup>
-                  {suggestions.map((feature) => (
-                    <CommandItem
-                      key={feature.properties.label}
-                      value={feature.properties.label}
-                      onSelect={() => handleSelect(feature)}
-                    >
-                      <MapPin className="mr-2 h-4 w-4 shrink-0" />
-                      <div className="flex flex-col">
-                        <span>{feature.properties.label}</span>
-                        <span className="text-sm text-muted-foreground">
-                          {feature.properties.postcode}, {feature.properties.city}
-                        </span>
-                      </div>
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              )}
-            </CommandList>
-          </Command>
-        </PopoverContent>
-      </Popover>
+        )}
+        
+        {showSuggestions && suggestions.length > 0 && (
+          <div className="absolute z-10 w-full mt-1 bg-white rounded-md shadow-lg border border-gray-200">
+            <ul className="py-1">
+              {suggestions.map((feature) => (
+                <li
+                  key={feature.properties.label}
+                  onClick={() => handleSelect(feature)}
+                  className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center"
+                >
+                  <MapPin className="mr-2 h-4 w-4 shrink-0 text-gray-500" />
+                  <div>
+                    <div className="text-sm font-medium">{feature.properties.label}</div>
+                    <div className="text-xs text-gray-500">
+                      {feature.properties.postcode}, {feature.properties.city}
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
       <Button
         variant="outline"
         size="icon"
