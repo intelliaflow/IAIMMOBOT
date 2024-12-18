@@ -38,14 +38,36 @@ export function LocationSearch({
       console.log("Recherche d'adresses pour:", debouncedValue);
       
       try {
-        const encodedValue = encodeURIComponent(debouncedValue);
-        const url = `https://api-adresse.data.gouv.fr/search/?q=${encodedValue}&limit=5&type=housenumber,street`;
+        // Format search query
+        let searchValue = debouncedValue.trim();
+        
+        // Add France if not present to improve results
+        if (!searchValue.toLowerCase().includes('france')) {
+          searchValue = `${searchValue}, France`;
+        }
+        
+        const encodedValue = encodeURIComponent(searchValue);
+        const url = `https://api-adresse.data.gouv.fr/search/?` + 
+          `q=${encodedValue}&` +
+          `limit=5&` +
+          `type=housenumber,street&` +
+          `autocomplete=1`;
+        
         console.log("URL de l'API:", url);
         
-        const response = await fetch(url);
+        const response = await fetch(url, {
+          headers: {
+            'Accept': 'application/json',
+            'User-Agent': 'IAImmo/1.0'
+          }
+        });
+        
         console.log("Statut de la réponse:", response.status);
 
         if (!response.ok) {
+          console.error(`Erreur HTTP ${response.status}: ${response.statusText}`);
+          const errorText = await response.text();
+          console.error("Détails de l'erreur:", errorText);
           throw new Error(`Erreur HTTP: ${response.status}`);
         }
 
