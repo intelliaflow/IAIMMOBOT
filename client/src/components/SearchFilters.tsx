@@ -34,7 +34,7 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
   const [isSearching, setIsSearching] = useState(false);
   const { toast } = useToast();
 
-  // Fonction de recherche simplifiée
+  // Fonction de recherche
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSearching(true);
@@ -69,24 +69,8 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
 
       console.log('Recherche avec les paramètres:', searchParams);
       
-      // Mise à jour du cache et déclenchement de la recherche
-      queryClient.setQueryData(['searchParams'], searchParams);
-      
       if (onSearch) {
         onSearch(searchParams);
-      } else {
-        // Invalider la requête actuelle et forcer un nouveau fetch
-        await queryClient.invalidateQueries({ 
-          queryKey: ['/api/properties']
-        });
-        
-        // Attendre que la nouvelle requête soit terminée
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
-        await queryClient.refetchQueries({
-          queryKey: ['/api/properties', searchParams],
-          exact: true
-        });
       }
 
       toast({
@@ -198,21 +182,48 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
             />
           </div>
 
-          {/* Bouton de recherche - Plus visible et réactif */}
-          <Button 
-            type="submit" 
-            className="w-full h-14 text-lg font-semibold mt-6" 
-            disabled={isSearching}
-          >
-            {isSearching ? (
-              <div className="flex items-center justify-center">
-                <span className="mr-2">Recherche en cours</span>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-              </div>
-            ) : (
-              "Rechercher"
-            )}
-          </Button>
+          {/* Boutons de recherche et réinitialisation */}
+          <div className="grid grid-cols-2 gap-4 mt-6">
+            <Button 
+              type="submit" 
+              className="h-14 text-lg font-semibold" 
+              disabled={isSearching}
+            >
+              {isSearching ? (
+                <div className="flex items-center justify-center">
+                  <span className="mr-2">Recherche en cours</span>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                </div>
+              ) : (
+                "Rechercher"
+              )}
+            </Button>
+            <Button 
+              type="button"
+              variant="outline"
+              className="h-14 text-lg font-semibold"
+              onClick={() => {
+                // Réinitialiser les états locaux
+                setLocation("");
+                setPropertyType(undefined);
+                setRooms(undefined);
+                setPriceRange([0, 1000000]);
+                setSelectedTransactionType(transactionType);
+                
+                // Réinitialiser les paramètres de recherche
+                const resetParams: SearchParams = {};
+                if (transactionType) {
+                  resetParams.transactionType = transactionType;
+                }
+                
+                if (onSearch) {
+                  onSearch(resetParams);
+                }
+              }}
+            >
+              Réinitialiser
+            </Button>
+          </div>
         </div>
   ), [
     handleSearch,
