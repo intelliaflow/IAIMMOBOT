@@ -127,12 +127,7 @@ export function LocationSearch({
         }}
       >
         <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            role="combobox"
-            aria-expanded={open}
-            className="w-full justify-between"
-          >
+          <div className="relative w-full">
             <Input
               value={inputValue}
               onChange={(e) => {
@@ -141,10 +136,14 @@ export function LocationSearch({
               }}
               onFocus={() => setOpen(true)}
               placeholder="Rechercher une adresse..."
-              className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-0"
+              className="w-full pr-8"
             />
-            {loading && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
-          </Button>
+            {loading && (
+              <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+              </div>
+            )}
+          </div>
         </PopoverTrigger>
         <PopoverContent className="w-full p-0" align="start">
           <Command>
