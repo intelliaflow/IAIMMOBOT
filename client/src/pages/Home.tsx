@@ -57,9 +57,11 @@ export function Home() {
             <SearchFilters 
               showTransactionTypeFilter={true}
               onSearch={(params) => {
+                console.log('Search triggered in Home with params:', params);
                 queryClient.setQueryData(['searchParams'], params);
                 queryClient.invalidateQueries({ 
-                  queryKey: ['/api/properties', params]
+                  queryKey: ['/api/properties', params],
+                  exact: true
                 });
               }}
             />

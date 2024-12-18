@@ -6,9 +6,11 @@ export function RentProperties() {
   const queryClient = useQueryClient();
 
   const handleSearch = (params: SearchParams) => {
+    console.log('Search triggered in RentProperties with params:', params);
     queryClient.setQueryData(['searchParams'], params);
     queryClient.invalidateQueries({ 
-      queryKey: [`/api/properties/transaction/rent`]
+      queryKey: [`/api/properties/transaction/rent`, params],
+      exact: true
     });
   };
 

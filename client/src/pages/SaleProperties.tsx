@@ -6,9 +6,11 @@ export function SaleProperties() {
   const queryClient = useQueryClient();
 
   const handleSearch = (params: SearchParams) => {
+    console.log('Search triggered in SaleProperties with params:', params);
     queryClient.setQueryData(['searchParams'], params);
     queryClient.invalidateQueries({ 
-      queryKey: [`/api/properties/transaction/sale`]
+      queryKey: [`/api/properties/transaction/sale`, params],
+      exact: true
     });
   };
 
