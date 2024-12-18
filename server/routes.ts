@@ -210,13 +210,29 @@ export function registerRoutes(app: Express): Server {
         updatedAt: new Date()
       };
 
-      // Géocode l'adresse
-      const coordinates = await geocodeAddress(propertyData.location);
+      // Géocode l'adresse avec plusieurs tentatives
+      let coordinates = null;
+      let attempts = 0;
+      const maxAttempts = 3;
+
+      while (!coordinates && attempts < maxAttempts) {
+        coordinates = await geocodeAddress(propertyData.location);
+        if (!coordinates) {
+          console.warn(`Tentative ${attempts + 1}/${maxAttempts} de géocodage échouée pour: ${propertyData.location}`);
+          await new Promise(resolve => setTimeout(resolve, 2000)); // Attendre 2 secondes entre les tentatives
+          attempts++;
+        }
+      }
+
       const propertyWithCoordinates = {
         ...propertyData,
         latitude: coordinates?.lat || null,
         longitude: coordinates?.lon || null
       };
+      
+      if (!coordinates) {
+        console.warn(`Impossible de géocoder l'adresse après ${maxAttempts} tentatives: ${propertyData.location}`);
+      }
       
       const newProperty = await db.insert(properties).values(propertyWithCoordinates).returning();
       return res.status(201).json(newProperty[0]);
@@ -300,6 +316,54 @@ export function registerRoutes(app: Express): Server {
       console.error("Error uploading images:", error);
       return res.status(500).json({ 
         message: "Failed to upload images" 
+      });
+    }
+  });
+  // Geocode all properties without coordinates
+  app.post("/api/properties/geocode-all", async (req, res) => {
+    try {
+      // Get all properties without coordinates
+      const propertiesWithoutCoords = await db
+        .select()
+        .from(properties)
+        .where(sql`${properties.latitude} IS NULL OR ${properties.longitude} IS NULL`);
+
+      if (propertiesWithoutCoords.length === 0) {
+        return res.json({ message: "No properties need geocoding" });
+      }
+
+      console.log(`Found ${propertiesWithoutCoords.length} properties to geocode`);
+
+      // Geocode all addresses
+      const addresses = propertiesWithoutCoords.map(p => p.location);
+      const geocodedResults = await batchGeocodeAddresses(addresses);
+
+      // Update each property with its coordinates
+      let updatedCount = 0;
+      for (const property of propertiesWithoutCoords) {
+        const coordinates = geocodedResults.get(property.location);
+        if (coordinates) {
+          await db
+            .update(properties)
+            .set({
+              latitude: coordinates.lat,
+              longitude: coordinates.lon,
+              updatedAt: new Date()
+            })
+            .where(eq(properties.id, property.id));
+          updatedCount++;
+        }
+      }
+
+      return res.json({ 
+        message: `Successfully geocoded ${updatedCount} properties`,
+        total: propertiesWithoutCoords.length,
+        updated: updatedCount
+      });
+    } catch (error) {
+      console.error("Error geocoding properties:", error);
+      return res.status(500).json({ 
+        message: "Failed to geocode properties" 
       });
     }
   });
