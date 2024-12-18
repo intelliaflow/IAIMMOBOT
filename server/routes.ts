@@ -223,15 +223,21 @@ export function registerRoutes(app: Express): Server {
         }
       }
 
-      const propertyWithCoordinates = {
-        ...propertyData,
-        latitude: coordinates?.lat || null,
-        longitude: coordinates?.lon || null
-      };
-      
       if (!coordinates) {
         console.warn(`Impossible de géocoder l'adresse après ${maxAttempts} tentatives: ${propertyData.location}`);
+        // On renvoie une erreur si on ne peut pas géocoder l'adresse
+        return res.status(400).json({
+          message: "Impossible de géolocaliser cette adresse. Veuillez vérifier que l'adresse est correcte et complète (numéro, rue, code postal, ville, France)."
+        });
       }
+
+      console.log(`Géocodage réussi pour ${propertyData.location}:`, coordinates);
+      
+      const propertyWithCoordinates = {
+        ...propertyData,
+        latitude: coordinates.lat,
+        longitude: coordinates.lon
+      };
       
       const newProperty = await db.insert(properties).values(propertyWithCoordinates).returning();
       return res.status(201).json(newProperty[0]);
@@ -361,6 +367,61 @@ export function registerRoutes(app: Express): Server {
       console.error("Error geocoding properties:", error);
       return res.status(500).json({ 
         message: "Failed to geocode properties" 
+      });
+    }
+  });
+
+  // Endpoint pour regéocoder toutes les propriétés
+  app.post("/api/properties/geocode-missing", async (req, res) => {
+    try {
+      // Récupérer toutes les propriétés sans coordonnées
+      const propertiesWithoutCoords = await db
+        .select()
+        .from(properties)
+        .where(sql`${properties.latitude} IS NULL OR ${properties.longitude} IS NULL`);
+
+      console.log(`${propertiesWithoutCoords.length} propriétés trouvées sans coordonnées`);
+
+      let updatedCount = 0;
+      let errorCount = 0;
+
+      for (const property of propertiesWithoutCoords) {
+        try {
+          // Attendre un peu entre chaque requête pour respecter les limites d'API
+          await new Promise(resolve => setTimeout(resolve, 1000));
+
+          const coordinates = await geocodeAddress(property.location);
+          if (coordinates) {
+            await db
+              .update(properties)
+              .set({
+                latitude: coordinates.lat,
+                longitude: coordinates.lon
+              })
+              .where(eq(properties.id, property.id));
+            
+            console.log(`Propriété ${property.id} mise à jour avec succès:`, coordinates);
+            updatedCount++;
+          } else {
+            console.warn(`Impossible de géocoder la propriété ${property.id}:`, property.location);
+            errorCount++;
+          }
+        } catch (error) {
+          console.error(`Erreur lors du géocodage de la propriété ${property.id}:`, error);
+          errorCount++;
+        }
+      }
+
+      return res.json({
+        message: `Géocodage terminé`,
+        total: propertiesWithoutCoords.length,
+        success: updatedCount,
+        errors: errorCount
+      });
+    } catch (error) {
+      console.error("Erreur lors du géocodage des propriétés:", error);
+      return res.status(500).json({
+        message: "Une erreur est survenue lors du géocodage des propriétés"
       });
     }
   });
