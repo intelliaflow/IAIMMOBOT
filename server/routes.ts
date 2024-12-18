@@ -377,74 +377,84 @@ export function registerRoutes(app: Express): Server {
       console.log("Starting geocoding of missing coordinates...");
       
       // Récupérer toutes les propriétés
-      const allProperties = await db
-        .select()
-        .from(properties);
+      const allProperties = await db.query.properties.findMany();
+      if (!allProperties || !Array.isArray(allProperties)) {
+        console.error("No properties found or invalid data format");
+        return res.status(400).json({ message: "No valid properties found" });
+      }
 
       console.log(`Total properties found: ${allProperties.length}`);
       
-      console.log("All properties:", allProperties);
-      
       // Filtrer les propriétés sans coordonnées valides
       const propertiesWithoutCoords = allProperties.filter(p => {
-        console.log("Checking property:", p.id, "Coords:", p.latitude, p.longitude);
-        return !p.latitude || !p.longitude || 
-               p.latitude === null || p.longitude === null ||
-               p.latitude === undefined || p.longitude === undefined;
+        const hasValidCoords = p.latitude && p.longitude && 
+                             p.latitude !== "null" && p.longitude !== "null" &&
+                             p.latitude !== "" && p.longitude !== "";
+        console.log(`Property ${p.id}: location=${p.location}, coords valid=${hasValidCoords}`);
+        return !hasValidCoords;
       });
 
       console.log(`Properties needing geocoding: ${propertiesWithoutCoords.length}`);
-      console.log("Properties without coords:", propertiesWithoutCoords);
 
       let updatedCount = 0;
       let errorCount = 0;
 
       for (const property of propertiesWithoutCoords) {
         try {
+          if (!property.location) {
+            console.warn(`Property ${property.id} has no location, skipping`);
+            errorCount++;
+            continue;
+          }
+
           // Attendre un peu entre chaque requête pour respecter les limites d'API
           await new Promise(resolve => setTimeout(resolve, 1000));
 
+          console.log(`Attempting to geocode property ${property.id} with location: ${property.location}`);
           const coordinates = await geocodeAddress(property.location);
-          if (coordinates) {
+          
+          if (coordinates && coordinates.lat && coordinates.lon) {
             try {
               const result = await db
                 .update(properties)
                 .set({
-                  latitude: coordinates.lat,
-                  longitude: coordinates.lon
+                  latitude: coordinates.lat.toString(),
+                  longitude: coordinates.lon.toString()
                 })
                 .where(eq(properties.id, property.id))
                 .returning();
               
-              console.log(`Propriété ${property.id} mise à jour avec succès:`, {
-                coordinates,
-                result: result[0]
-              });
-              updatedCount++;
+              if (result && result[0]) {
+                console.log(`Successfully updated property ${property.id} with coordinates:`, coordinates);
+                updatedCount++;
+              } else {
+                console.error(`Failed to update property ${property.id} in database`);
+                errorCount++;
+              }
             } catch (updateError) {
-              console.error(`Erreur lors de la mise à jour de la propriété ${property.id}:`, updateError);
+              console.error(`Database error updating property ${property.id}:`, updateError);
               errorCount++;
             }
           } else {
-            console.warn(`Impossible de géocoder la propriété ${property.id}:`, property.location);
+            console.warn(`Could not geocode property ${property.id} location: ${property.location}`);
             errorCount++;
           }
         } catch (error) {
-          console.error(`Erreur lors du géocodage de la propriété ${property.id}:`, error);
+          console.error(`Error processing property ${property.id}:`, error);
           errorCount++;
         }
       }
 
       return res.json({
-        message: `Géocodage terminé`,
+        message: `Geocoding completed`,
         total: propertiesWithoutCoords.length,
         success: updatedCount,
         errors: errorCount
       });
     } catch (error) {
-      console.error("Erreur lors du géocodage des propriétés:", error);
+      console.error("Error during geocoding process:", error);
       return res.status(500).json({
-        message: "Une erreur est survenue lors du géocodage des propriétés"
+        message: "An error occurred during the geocoding process"
       });
     }
   });
