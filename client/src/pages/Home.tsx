@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { PropertyCard } from "@/components/PropertyCard";
 import { SearchFilters } from "@/components/SearchFilters";
@@ -7,6 +8,11 @@ import type { SearchParams } from "@/components/SearchFilters";
 export function Home() {
   const queryClient = useQueryClient();
   const searchParams = queryClient.getQueryData<SearchParams>(['searchParams']) || {};
+
+  // Réinitialiser les paramètres de recherche lors du montage du composant
+  useEffect(() => {
+    queryClient.setQueryData(['searchParams'], {});
+  }, []); // Se déclenche uniquement au montage
 
   const { data: properties, isLoading } = useQuery<Property[]>({
     queryKey: ["/api/properties", searchParams],
