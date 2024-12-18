@@ -86,13 +86,19 @@ export function LocationSearch({
   }, []);
 
   const handleSelect = (feature: AddressFeature) => {
-    const selectedValue = feature.properties.label;
-    setInputValue(selectedValue);
-    onChange(selectedValue);
-    if (onLocationSelect) {
-      onLocationSelect(feature);
+    try {
+      console.log("Feature sélectionnée:", feature);
+      const selectedValue = feature.properties.label;
+      console.log("Valeur sélectionnée:", selectedValue);
+      setInputValue(selectedValue);
+      onChange(selectedValue);
+      if (onLocationSelect) {
+        onLocationSelect(feature);
+      }
+      setShowSuggestions(false);
+    } catch (error) {
+      console.error("Erreur lors de la sélection:", error);
     }
-    setShowSuggestions(false);
   };
 
   const handleGeolocation = () => {
@@ -155,9 +161,9 @@ export function LocationSearch({
             <ul className="py-1">
               {suggestions.map((feature, index) => {
                 console.log("Affichage suggestion:", feature);
-                const label = feature.properties?.label || feature.label || "Adresse inconnue";
-                const postcode = feature.properties?.postcode || feature.postcode;
-                const city = feature.properties?.city || feature.city;
+                const label = feature.properties.label || "Adresse inconnue";
+                const postcode = feature.properties.postcode;
+                const city = feature.properties.city;
                 
                 return (
                   <li
