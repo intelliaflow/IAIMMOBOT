@@ -5,16 +5,12 @@ import { useQueryClient } from "@tanstack/react-query";
 export function SaleProperties() {
   const queryClient = useQueryClient();
 
-  const handleSearch = (params: SearchParams) => {
+  const handleSearch = async (params: SearchParams) => {
     console.log('Search triggered in SaleProperties with params:', params);
-    // Force React Query to refetch with new parameters
-    queryClient.setQueryData(['searchParams'], params);
-    queryClient.invalidateQueries({ 
-      queryKey: [`/api/properties/transaction/sale`, params]
-    });
-    // Forcer un rafraîchissement immédiat
-    queryClient.refetchQueries({
-      queryKey: [`/api/properties/transaction/sale`, params]
+    // Forcer le rafraîchissement des données avec les nouveaux paramètres
+    await queryClient.refetchQueries({
+      queryKey: [`/api/properties/transaction/sale`],
+      exact: false
     });
   };
 

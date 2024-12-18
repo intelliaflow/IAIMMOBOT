@@ -35,7 +35,7 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
   const { toast } = useToast();
 
   // Fonction de recherche simplifiée
-  const handleSearch = (e: React.FormEvent) => {
+  const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Construction des paramètres de recherche
@@ -70,7 +70,19 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
     if (onSearch) {
       setIsSearching(true);
       try {
-        onSearch(searchParams);
+        // Force la mise à jour des paramètres de recherche dans le cache
+        queryClient.setQueryData(['searchParams'], searchParams);
+        
+        // Attendre que la recherche soit terminée
+        await onSearch(searchParams);
+        
+        // Forcer un rafraîchissement global des requêtes de propriétés
+        await Promise.all([
+          queryClient.refetchQueries({ queryKey: ['/api/properties'] }),
+          queryClient.refetchQueries({ queryKey: ['/api/properties/transaction/sale'] }),
+          queryClient.refetchQueries({ queryKey: ['/api/properties/transaction/rent'] })
+        ]);
+
         toast({
           title: "Recherche effectuée",
           description: "Les résultats ont été mis à jour",
