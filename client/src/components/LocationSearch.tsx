@@ -29,6 +29,7 @@ export function LocationSearch({
   useEffect(() => {
     const fetchSuggestions = async () => {
       if (!debouncedValue || debouncedValue.length < 2) {
+        console.log("Valeur trop courte, pas de recherche");
         setSuggestions([]);
         return;
       }
@@ -51,12 +52,15 @@ export function LocationSearch({
         const data = await response.json();
         console.log("Données reçues:", data);
         
-        if (data && Array.isArray(data)) {
-          console.log("Format ancien - tableau direct");
-          setSuggestions(data);
-          setShowSuggestions(true);
-        } else if (data.features && Array.isArray(data.features)) {
-          console.log("Format nouveau - avec features");
+        if (data && Array.isArray(data.features)) {
+          console.log(`${data.features.length} suggestions trouvées`);
+          data.features.forEach((feature: AddressFeature, index: number) => {
+            console.log(`Suggestion ${index + 1}:`, {
+              label: feature.properties.label,
+              postcode: feature.properties.postcode,
+              city: feature.properties.city
+            });
+          });
           setSuggestions(data.features);
           setShowSuggestions(true);
         } else {
