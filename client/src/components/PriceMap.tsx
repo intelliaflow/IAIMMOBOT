@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Link } from "wouter";
 import type { Icon, LatLngTuple } from 'leaflet';
 import L from 'leaflet';
+import { formatAddress } from "@/lib/utils";
 
 const DefaultIcon: Icon = L.icon({
   iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
@@ -69,7 +70,7 @@ export function PriceMap({ properties }: PriceMapProps) {
                   <Link href={`/property/${property.id}`}>
                     <div className="cursor-pointer">
                       <h3 className="font-semibold mb-1">{property.title}</h3>
-                      <p className="text-sm text-gray-600 mb-2">{property.location}</p>
+                      <p className="text-sm text-gray-600 mb-2">{formatAddress(property.location)}</p>
                       <Badge>
                         {new Intl.NumberFormat('fr-FR', { 
                           style: 'currency', 

@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Bed, Bath, Square } from "lucide-react";
 import { Link } from "wouter";
 import type { Property } from "@db/schema";
+import { formatAddress } from "@/lib/utils";
 
 interface PropertyCardProps {
   property: Property;
@@ -30,7 +31,9 @@ export function PropertyCard({ property }: PropertyCardProps) {
         </div>
         <CardContent className="pt-4">
           <h3 className="text-lg font-semibold mb-2">{property.title}</h3>
-          <p className="text-sm text-gray-500 mb-2">{property.location.split(',')[0].trim()}</p>
+          <p className="text-sm text-gray-500 mb-2">
+            {formatAddress(property.location)}
+          </p>
           <div className="flex gap-4 text-sm text-gray-600">
             <div className="flex items-center gap-1">
               <Bed className="h-4 w-4" />

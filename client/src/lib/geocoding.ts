@@ -29,9 +29,15 @@ export async function geocodeAddress(address: string): Promise<{ lat: string; lo
     }
 
     // S'assurer que l'adresse est bien formatée
-    const formattedAddress = address.toLowerCase().includes('france') 
-      ? address.trim()
-      : `${address.trim()}, France`;
+    let formattedAddress = address.trim();
+    if (!formattedAddress.toLowerCase().includes('france')) {
+      formattedAddress = `${formattedAddress}, France`;
+    }
+    
+    // Vérifie si l'adresse contient un code postal
+    if (!/\d{5}/.test(formattedAddress)) {
+      console.warn('Address missing postal code:', formattedAddress);
+    }
 
     console.log('Formatted address for geocoding:', formattedAddress);
     
