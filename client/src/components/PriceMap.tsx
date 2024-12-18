@@ -1,17 +1,18 @@
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import MarkerClusterGroup from 'react-leaflet-cluster';
 import 'leaflet/dist/leaflet.css';
 import type { Property } from '@db/schema';
 import { Badge } from "@/components/ui/badge";
 import { Link } from "wouter";
+import type { LatLngExpression } from 'leaflet';
 
 // Fix for leaflet default marker icons
 import L from 'leaflet';
 import icon from 'leaflet/dist/images/marker-icon.png';
 import iconShadow from 'leaflet/dist/images/marker-shadow.png';
 
-let DefaultIcon = L.icon({
+const DefaultIcon = L.icon({
   iconUrl: icon,
   shadowUrl: iconShadow,
   iconSize: [25, 41],
@@ -25,16 +26,26 @@ interface PriceMapProps {
   properties: Property[];
 }
 
+interface PropertyMarker extends Property {
+  position: [number, number];
+}
+
 export function PriceMap({ properties }: PriceMapProps) {
   // Default to France center coordinates
-  const center: [number, number] = [46.603354, 1.888334];
+  const center: LatLngExpression = [46.603354, 1.888334];
   
   const markersData = useMemo(() => {
     return properties
-      .filter(property => property.latitude && property.longitude)
+      .filter((property): property is Property & { latitude: string; longitude: string } => 
+        property.latitude !== null && 
+        property.longitude !== null
+      )
       .map(property => ({
         ...property,
-        position: [parseFloat(property.latitude), parseFloat(property.longitude)] as [number, number]
+        position: [
+          parseFloat(property.latitude), 
+          parseFloat(property.longitude)
+        ] as [number, number]
       }));
   }, [properties]);
 
@@ -50,7 +61,10 @@ export function PriceMap({ properties }: PriceMapProps) {
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        <MarkerClusterGroup>
+        <MarkerClusterGroup
+          chunkedLoading
+          maxClusterRadius={50}
+        >
           {markersData.map((property) => (
             <Marker
               key={property.id}
