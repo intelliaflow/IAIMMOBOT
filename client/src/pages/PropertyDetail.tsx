@@ -37,11 +37,17 @@ export function PropertyDetail() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         <div className="md:col-span-2">
           <div className="aspect-[16/9] relative overflow-hidden rounded-lg mb-8">
-            <img
-              src={property.images[0]}
-              alt={property.title}
-              className="object-cover w-full h-full"
-            />
+            {property.images && property.images[0] ? (
+              <img
+                src={property.images[0]}
+                alt={property.title}
+                className="object-cover w-full h-full"
+              />
+            ) : (
+              <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                <span className="text-gray-400">Aucune image disponible</span>
+              </div>
+            )}
           </div>
           
           <h1 className="text-3xl font-bold mb-2">{property.title}</h1>
@@ -70,15 +76,19 @@ export function PropertyDetail() {
             {property.description}
           </p>
 
-          <h2 className="text-2xl font-semibold mb-4">Caractéristiques</h2>
-          <ul className="grid grid-cols-2 gap-4 mb-8">
-            {property.features?.map((feature, index) => (
-              <li key={index} className="flex items-center gap-2 text-gray-600">
-                <span className="h-2 w-2 bg-primary rounded-full"></span>
-                {feature}
-              </li>
-            ))}
-          </ul>
+          {property.features && property.features.length > 0 && (
+            <>
+              <h2 className="text-2xl font-semibold mb-4">Caractéristiques</h2>
+              <ul className="grid grid-cols-2 gap-4 mb-8">
+                {property.features.map((feature, index) => (
+                  <li key={index} className="flex items-center gap-2 text-gray-600">
+                    <span className="h-2 w-2 bg-primary rounded-full"></span>
+                    {feature}
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
         </div>
 
         <div>

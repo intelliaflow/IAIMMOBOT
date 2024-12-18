@@ -144,6 +144,31 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Get property by ID
+  app.get("/api/properties/:id", async (req, res) => {
+    try {
+      const propertyId = parseInt(req.params.id);
+      if (isNaN(propertyId)) {
+        return res.status(400).json({ message: "Invalid property ID" });
+      }
+
+      const property = await db.query.properties.findFirst({
+        where: eq(properties.id, propertyId),
+      });
+
+      if (!property) {
+        return res.status(404).json({ message: "Property not found" });
+      }
+
+      return res.json(property);
+    } catch (error) {
+      console.error("Error fetching property:", error);
+      return res.status(500).json({ 
+        message: "Failed to fetch property details" 
+      });
+    }
+  });
+
   // Get agency properties with filters
   app.get("/api/properties/agency", async (req, res) => {
     try {
