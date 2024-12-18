@@ -34,19 +34,31 @@ export function LocationSearch({
       }
 
       setLoading(true);
+      console.log("Recherche d'adresses pour:", debouncedValue);
+      
       try {
         const encodedValue = encodeURIComponent(debouncedValue);
-        const response = await fetch(
-          `https://api-adresse.data.gouv.fr/search/?q=${encodedValue}&limit=5&type=housenumber,street`
-        );
+        const url = `https://api-adresse.data.gouv.fr/search/?q=${encodedValue}&limit=5&type=housenumber,street`;
+        console.log("URL de l'API:", url);
+        
+        const response = await fetch(url);
+        console.log("Statut de la réponse:", response.status);
 
         if (!response.ok) {
           throw new Error(`Erreur HTTP: ${response.status}`);
         }
 
-        const data: AddressResponse = await response.json();
-        setSuggestions(data.features || []);
-        setShowSuggestions(true);
+        const data = await response.json();
+        console.log("Données reçues:", data);
+        
+        if (data.features && data.features.length > 0) {
+          console.log("Suggestions trouvées:", data.features.length);
+          setSuggestions(data.features);
+          setShowSuggestions(true);
+        } else {
+          console.log("Aucune suggestion trouvée");
+          setSuggestions([]);
+        }
       } catch (error) {
         console.error("Erreur lors de la recherche d'adresses:", error);
         setSuggestions([]);
