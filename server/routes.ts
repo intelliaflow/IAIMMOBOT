@@ -377,10 +377,12 @@ export function registerRoutes(app: Express): Server {
       console.log("Starting geocoding of missing coordinates...");
       
       // Récupérer toutes les propriétés
-      const allProperties = await db.query.properties.findMany();
-      if (!allProperties || !Array.isArray(allProperties)) {
+      const allProperties = await db.select().from(properties);
+      console.log("Database query result:", allProperties);
+      
+      if (!allProperties || !Array.isArray(allProperties) || allProperties.length === 0) {
         console.error("No properties found or invalid data format");
-        return res.status(400).json({ message: "No valid properties found" });
+        return res.status(400).json({ message: "No properties found in database" });
       }
 
       console.log(`Total properties found: ${allProperties.length}`);
