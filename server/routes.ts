@@ -383,14 +383,18 @@ export function registerRoutes(app: Express): Server {
 
       console.log(`Total properties found: ${allProperties.length}`);
       
+      console.log("All properties:", allProperties);
+      
       // Filtrer les propriétés sans coordonnées valides
-      const propertiesWithoutCoords = allProperties.filter(p => 
-        p.latitude === null || p.longitude === null ||
-        p.latitude === undefined || p.longitude === undefined ||
-        p.latitude === '' || p.longitude === ''
-      );
+      const propertiesWithoutCoords = allProperties.filter(p => {
+        console.log("Checking property:", p.id, "Coords:", p.latitude, p.longitude);
+        return !p.latitude || !p.longitude || 
+               p.latitude === null || p.longitude === null ||
+               p.latitude === undefined || p.longitude === undefined;
+      });
 
       console.log(`Properties needing geocoding: ${propertiesWithoutCoords.length}`);
+      console.log("Properties without coords:", propertiesWithoutCoords);
 
       let updatedCount = 0;
       let errorCount = 0;
@@ -402,16 +406,25 @@ export function registerRoutes(app: Express): Server {
 
           const coordinates = await geocodeAddress(property.location);
           if (coordinates) {
-            await db
-              .update(properties)
-              .set({
-                latitude: coordinates.lat,
-                longitude: coordinates.lon
-              })
-              .where(eq(properties.id, property.id));
-            
-            console.log(`Propriété ${property.id} mise à jour avec succès:`, coordinates);
-            updatedCount++;
+            try {
+              const result = await db
+                .update(properties)
+                .set({
+                  latitude: coordinates.lat,
+                  longitude: coordinates.lon
+                })
+                .where(eq(properties.id, property.id))
+                .returning();
+              
+              console.log(`Propriété ${property.id} mise à jour avec succès:`, {
+                coordinates,
+                result: result[0]
+              });
+              updatedCount++;
+            } catch (updateError) {
+              console.error(`Erreur lors de la mise à jour de la propriété ${property.id}:`, updateError);
+              errorCount++;
+            }
           } else {
             console.warn(`Impossible de géocoder la propriété ${property.id}:`, property.location);
             errorCount++;

@@ -17,24 +17,23 @@ export async function geocodeAddress(address: string): Promise<{ lat: string; lo
     console.error('No address provided for geocoding');
     return null;
   }
+
   console.log('Starting geocoding for address:', address);
+  
   try {
-    // Check cache first
+    // Vérifier le cache en premier
     const cachedResult = geocodingCache.get(address);
     if (cachedResult) {
       console.log('Using cached coordinates for:', address);
       return cachedResult;
     }
 
-    // Add a small delay to respect API rate limits
-    await delay(1000);
-
-    // Format address to ensure it includes "France"
+    // S'assurer que l'adresse est bien formatée
     const formattedAddress = address.toLowerCase().includes('france') 
-      ? address 
-      : `${address}, France`;
-    
-    console.log('Trying to geocode address:', formattedAddress);
+      ? address.trim()
+      : `${address.trim()}, France`;
+
+    console.log('Formatted address for geocoding:', formattedAddress);
     
     const encodedAddress = encodeURIComponent(formattedAddress);
     const url = `https://nominatim.openstreetmap.org/search?` + 
@@ -45,6 +44,9 @@ export async function geocodeAddress(address: string): Promise<{ lat: string; lo
       `limit=1`; // Get only the best match
     
     console.log('Making request to:', url);
+    
+    // Ajouter un délai pour respecter les limites de l'API
+    await delay(1000);
     
     const response = await fetch(url, {
       headers: {
