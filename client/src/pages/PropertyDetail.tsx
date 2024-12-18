@@ -4,6 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Bed, Bath, Square, MapPin, Phone, Mail } from "lucide-react";
 import type { Property } from "@db/schema";
+import { formatAddress } from "@/lib/utils";
+
+// Using the formatAddress function from utils.ts
 
 export function PropertyDetail() {
   const { id } = useParams();
@@ -49,11 +52,11 @@ export function PropertyDetail() {
               </div>
             )}
           </div>
-          
+
           <h1 className="text-3xl font-bold mb-2">{property.title}</h1>
           <div className="flex items-center text-gray-600 mb-6">
             <MapPin className="h-5 w-5 mr-2" />
-            <span>{property.location}</span>
+            <span>{formatAddress(property.location, false)}</span>
           </div>
 
           <div className="flex gap-6 mb-8">
@@ -97,7 +100,7 @@ export function PropertyDetail() {
               <div className="text-2xl font-bold mb-6">
                 {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(property.price)}
               </div>
-              
+
               <div className="space-y-4">
                 <Button className="w-full" size="lg">
                   <Phone className="h-4 w-4 mr-2" />

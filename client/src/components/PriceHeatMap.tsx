@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { ScatterChart, Scatter, XAxis, YAxis, ZAxis, Tooltip, Cell } from "recharts";
 import type { Property } from "@db/schema";
+import { formatAddress } from "@/lib/utils";
 
 interface PriceHeatMapProps {
   properties: Property[];
