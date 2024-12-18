@@ -35,18 +35,35 @@ export function PriceMap({ properties }: PriceMapProps) {
   const center: LatLngExpression = [46.603354, 1.888334];
   
   const markersData = useMemo(() => {
-    return properties
-      .filter((property): property is Property & { latitude: string; longitude: string } => 
-        property.latitude !== null && 
-        property.longitude !== null
-      )
-      .map(property => ({
+    return properties.map(property => {
+      // Si les coordonnées sont disponibles, les utiliser
+      if (property.latitude && property.longitude) {
+        return {
+          ...property,
+          position: [
+            parseFloat(property.latitude),
+            parseFloat(property.longitude)
+          ] as [number, number]
+        };
+      }
+      
+      // Sinon, générer des coordonnées approximatives pour la France
+      // Cela permet d'avoir une visualisation en attendant le géocodage
+      const franceBounds = {
+        north: 51.089167, // Latitude max France
+        south: 42.333333, // Latitude min France
+        east: 8.233333,   // Longitude max France
+        west: -4.795556   // Longitude min France
+      };
+      
+      return {
         ...property,
         position: [
-          parseFloat(property.latitude), 
-          parseFloat(property.longitude)
+          franceBounds.south + Math.random() * (franceBounds.north - franceBounds.south),
+          franceBounds.west + Math.random() * (franceBounds.east - franceBounds.west)
         ] as [number, number]
-      }));
+      };
+    });
   }, [properties]);
 
   return (
