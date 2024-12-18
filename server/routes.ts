@@ -390,75 +390,55 @@ export function registerRoutes(app: Express): Server {
   // Endpoint pour regéocoder toutes les propriétés
   app.get("/api/properties/geocode-missing", async (req, res) => {
     try {
-      console.log("Starting geocoding of missing coordinates...");
-      
-      // Récupérer toutes les propriétés
-      const allProperties = await db.select().from(properties);
-      console.log("Database query result:", allProperties);
-      
-      if (!allProperties || !Array.isArray(allProperties) || allProperties.length === 0) {
-        console.error("No properties found or invalid data format");
-        return res.status(400).json({ message: "No properties found in database" });
-      }
+      // Récupérer les propriétés sans coordonnées valides
+      const propertiesWithoutCoords = await db
+        .select()
+        .from(properties)
+        .where(sql`${properties.latitude} IS NULL OR ${properties.longitude} IS NULL`);
 
-      console.log(`Total properties found: ${allProperties.length}`);
-      
-      // Filtrer les propriétés sans coordonnées valides
-      const propertiesWithoutCoords = allProperties.filter(p => {
-        const hasValidCoords = p.latitude && p.longitude && 
-                             p.latitude !== "null" && p.longitude !== "null" &&
-                             p.latitude !== "" && p.longitude !== "";
-        console.log(`Property ${p.id}: location=${p.location}, coords valid=${hasValidCoords}`);
-        return !hasValidCoords;
-      });
-
-      console.log(`Properties needing geocoding: ${propertiesWithoutCoords.length}`);
+      console.log(`Found ${propertiesWithoutCoords.length} properties needing geocoding`);
 
       let updatedCount = 0;
       let errorCount = 0;
 
       for (const property of propertiesWithoutCoords) {
+        if (!property.location) {
+          console.warn(`Property ${property.id} has no location, skipping`);
+          errorCount++;
+          continue;
+        }
+
+        // Format address for better geocoding results
+        let formattedAddress = property.location.trim();
+        if (!formattedAddress.toLowerCase().includes('france')) {
+          formattedAddress = `${formattedAddress}, France`;
+        }
+
+        console.log(`Geocoding property ${property.id}: ${formattedAddress}`);
+        
         try {
-          if (!property.location) {
-            console.warn(`Property ${property.id} has no location, skipping`);
-            errorCount++;
-            continue;
-          }
-
-          // Attendre un peu entre chaque requête pour respecter les limites d'API
+          // Wait between requests to respect API limits
           await new Promise(resolve => setTimeout(resolve, 1000));
-
-          console.log(`Attempting to geocode property ${property.id} with location: ${property.location}`);
-          const coordinates = await geocodeAddress(property.location);
+          
+          const coordinates = await geocodeAddress(formattedAddress);
           
           if (coordinates && coordinates.lat && coordinates.lon) {
-            try {
-              const result = await db
-                .update(properties)
-                .set({
-                  latitude: coordinates.lat.toString(),
-                  longitude: coordinates.lon.toString()
-                })
-                .where(eq(properties.id, property.id))
-                .returning();
-              
-              if (result && result[0]) {
-                console.log(`Successfully updated property ${property.id} with coordinates:`, coordinates);
-                updatedCount++;
-              } else {
-                console.error(`Failed to update property ${property.id} in database`);
-                errorCount++;
-              }
-            } catch (updateError) {
-              console.error(`Database error updating property ${property.id}:`, updateError);
-              errorCount++;
-            }
+            await db
+              .update(properties)
+              .set({
+                latitude: coordinates.lat,
+                longitude: coordinates.lon
+              })
+              .where(eq(properties.id, property.id));
+            
+            console.log(`Updated property ${property.id} with coordinates:`, coordinates);
+            updatedCount++;
           } else {
-            console.warn(`Could not geocode property ${property.id} location: ${property.location}`);
+            console.warn(`No coordinates found for property ${property.id}`);
             errorCount++;
           }
         } catch (error) {
-          console.error(`Error processing property ${property.id}:`, error);
+          console.error(`Error geocoding property ${property.id}:`, error);
           errorCount++;
         }
       }
