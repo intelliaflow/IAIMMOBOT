@@ -1,7 +1,7 @@
+import { useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { PropertyCard } from "@/components/PropertyCard";
 import type { SearchParams } from "@/components/SearchFilters";
-
 import type { Property } from "@db/schema";
 
 interface PropertiesListProps {
