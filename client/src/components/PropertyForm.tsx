@@ -40,6 +40,19 @@ export function PropertyForm({ property, onSuccess }: PropertyFormProps) {
   const [uploadedImageUrls, setUploadedImageUrls] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
 
+  const defaultFeatures = [
+    "Parking",
+    "Balcon",
+    "Terrasse",
+    "Cave",
+    "Ascenseur",
+    "Gardien",
+    "Interphone",
+    "Fibre optique",
+    "Double vitrage",
+    "Climatisation"
+  ];
+
   const form = useForm<PropertyFormValues>({
     resolver: zodResolver(propertySchema),
     defaultValues: property ? {
@@ -342,12 +355,45 @@ export function PropertyForm({ property, onSuccess }: PropertyFormProps) {
           />
         </div>
 
+        <FormField
+          control={form.control}
+          name="features"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Caractéristiques</FormLabel>
+              <FormControl>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {defaultFeatures.map((feature) => (
+                    <div key={feature} className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id={feature}
+                        checked={field.value.includes(feature)}
+                        onChange={(e) => {
+                          const updatedFeatures = e.target.checked
+                            ? [...field.value, feature]
+                            : field.value.filter((f) => f !== feature);
+                          field.onChange(updatedFeatures);
+                        }}
+                        className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                      />
+                      <label htmlFor={feature} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                        {feature}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
         <div className="space-y-4">
           <FormItem>
             <FormLabel>Images</FormLabel>
             <FormControl>
               <div className="space-y-4">
-                {/* Prévisualisation des images */}
                 {(form.getValues('images') || []).length > 0 && (
                   <div className="grid grid-cols-3 gap-4">
                     {form.getValues('images')?.map((url, index) => (
@@ -368,8 +414,6 @@ export function PropertyForm({ property, onSuccess }: PropertyFormProps) {
                     ))}
                   </div>
                 )}
-                
-                {/* Input pour télécharger de nouvelles images */}
                 <Input
                   type="file"
                   accept="image/*"
