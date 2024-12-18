@@ -29,17 +29,13 @@ export function PriceMap({ properties }: PriceMapProps) {
   // Default to France center coordinates
   const center: [number, number] = [46.603354, 1.888334];
   
-  // Simulated coordinates for demo - in production these would come from geocoding
   const markersData = useMemo(() => {
-    return properties.map((property, index) => {
-      // This is for demo - in production, you would use real coordinates from geocoding
-      const lat = center[0] + (Math.random() - 0.5) * 4;
-      const lng = center[1] + (Math.random() - 0.5) * 4;
-      return {
+    return properties
+      .filter(property => property.latitude && property.longitude)
+      .map(property => ({
         ...property,
-        position: [lat, lng] as [number, number]
-      };
-    });
+        position: [parseFloat(property.latitude), parseFloat(property.longitude)] as [number, number]
+      }));
   }, [properties]);
 
   return (

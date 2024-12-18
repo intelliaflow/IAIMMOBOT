@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { db } from "@db";
 import { properties, documents } from "@db/schema";
 import { eq, and, sql, desc } from "drizzle-orm";
+import { geocodeAddress } from "../client/src/lib/geocoding";
 
 // Helper function to handle rooms filter
 function handleRoomsFilter(rooms: string | undefined) {
@@ -209,7 +210,15 @@ export function registerRoutes(app: Express): Server {
         updatedAt: new Date()
       };
 
-      const newProperty = await db.insert(properties).values(propertyData).returning();
+      // Géocode l'adresse
+      const coordinates = await geocodeAddress(propertyData.location);
+      const propertyWithCoordinates = {
+        ...propertyData,
+        latitude: coordinates?.lat || null,
+        longitude: coordinates?.lon || null
+      };
+      
+      const newProperty = await db.insert(properties).values(propertyWithCoordinates).returning();
       return res.status(201).json(newProperty[0]);
     } catch (error) {
       console.error("Error creating property:", error);
