@@ -374,13 +374,22 @@ export function registerRoutes(app: Express): Server {
   // Endpoint pour regéocoder toutes les propriétés
   app.get("/api/properties/geocode-missing", async (req, res) => {
     try {
-      // Récupérer toutes les propriétés sans coordonnées
-      const propertiesWithoutCoords = await db
+      console.log("Starting geocoding of missing coordinates...");
+      
+      // Récupérer toutes les propriétés
+      const allProperties = await db
         .select()
-        .from(properties)
-        .where(sql`${properties.latitude} IS NULL OR ${properties.longitude} IS NULL`);
+        .from(properties);
 
-      console.log(`${propertiesWithoutCoords.length} propriétés trouvées sans coordonnées`);
+      console.log(`Total properties found: ${allProperties.length}`);
+      
+      // Filtrer les propriétés sans coordonnées valides
+      const propertiesWithoutCoords = allProperties.filter(p => 
+        !p.latitude || !p.longitude || 
+        p.latitude.trim() === '' || p.longitude.trim() === ''
+      );
+
+      console.log(`Properties needing geocoding: ${propertiesWithoutCoords.length}`);
 
       let updatedCount = 0;
       let errorCount = 0;

@@ -13,6 +13,10 @@ const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 const geocodingCache = new Map<string, { lat: string; lon: string }>();
 
 export async function geocodeAddress(address: string): Promise<{ lat: string; lon: string } | null> {
+  if (!address) {
+    console.error('No address provided for geocoding');
+    return null;
+  }
   try {
     // Check cache first
     const cachedResult = geocodingCache.get(address);
