@@ -61,7 +61,11 @@ export function Home() {
                 // Force React Query to refetch with new parameters
                 queryClient.setQueryData(['searchParams'], params);
                 queryClient.invalidateQueries({ 
-                  queryKey: ['/api/properties']
+                  queryKey: ['/api/properties', params]
+                });
+                // Forcer un rafraîchissement immédiat
+                queryClient.refetchQueries({
+                  queryKey: ['/api/properties', params]
                 });
               }}
             />

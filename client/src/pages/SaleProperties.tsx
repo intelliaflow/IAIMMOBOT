@@ -10,7 +10,11 @@ export function SaleProperties() {
     // Force React Query to refetch with new parameters
     queryClient.setQueryData(['searchParams'], params);
     queryClient.invalidateQueries({ 
-      queryKey: [`/api/properties/transaction/sale`]
+      queryKey: [`/api/properties/transaction/sale`, params]
+    });
+    // Forcer un rafraîchissement immédiat
+    queryClient.refetchQueries({
+      queryKey: [`/api/properties/transaction/sale`, params]
     });
   };
 

@@ -18,11 +18,12 @@ export function PropertiesList({ transactionType }: PropertiesListProps) {
       const [_, params] = queryKey;
       const urlParams = new URLSearchParams();
       
-      if (params.location) urlParams.append('location', params.location);
-      if (params.propertyType) urlParams.append('type', params.propertyType);
-      if (params.rooms) urlParams.append('rooms', params.rooms);
-      if (params.minPrice) urlParams.append('minPrice', params.minPrice.toString());
-      if (params.maxPrice) urlParams.append('maxPrice', params.maxPrice.toString());
+      // Utiliser les paramètres de recherche actuels
+      if (params?.location) urlParams.append('location', params.location);
+      if (params?.propertyType) urlParams.append('type', params.propertyType);
+      if (params?.rooms) urlParams.append('rooms', params.rooms);
+      if (params?.minPrice) urlParams.append('minPrice', params.minPrice.toString());
+      if (params?.maxPrice) urlParams.append('maxPrice', params.maxPrice.toString());
 
       const queryString = urlParams.toString();
       const url = `/api/properties/transaction/${transactionType}${queryString ? `?${queryString}` : ''}`;
@@ -42,7 +43,13 @@ export function PropertiesList({ transactionType }: PropertiesListProps) {
       return data;
     },
     enabled: true,
+    staleTime: 0, // Toujours refetch quand les paramètres changent
   });
+
+  // Réinitialiser les paramètres de recherche lors du montage du composant
+  useEffect(() => {
+    queryClient.setQueryData(['searchParams'], {});
+  }, [transactionType]); // Se déclenche quand on change de page
 
   if (isLoading) {
     return <div className="text-center p-4">Chargement...</div>;

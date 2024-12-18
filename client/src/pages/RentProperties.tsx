@@ -10,7 +10,11 @@ export function RentProperties() {
     // Force React Query to refetch with new parameters
     queryClient.setQueryData(['searchParams'], params);
     queryClient.invalidateQueries({ 
-      queryKey: [`/api/properties/transaction/rent`]
+      queryKey: [`/api/properties/transaction/rent`, params]
+    });
+    // Forcer un rafraîchissement immédiat
+    queryClient.refetchQueries({
+      queryKey: [`/api/properties/transaction/rent`, params]
     });
   };
 
