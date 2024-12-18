@@ -372,7 +372,7 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Endpoint pour regéocoder toutes les propriétés
-  app.post("/api/properties/geocode-missing", async (req, res) => {
+  app.get("/api/properties/geocode-missing", async (req, res) => {
     try {
       // Récupérer toutes les propriétés sans coordonnées
       const propertiesWithoutCoords = await db

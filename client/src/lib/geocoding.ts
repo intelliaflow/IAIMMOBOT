@@ -29,21 +29,24 @@ export async function geocodeAddress(address: string): Promise<{ lat: string; lo
       ? address 
       : `${address}, France`;
     
+    console.log('Trying to geocode address:', formattedAddress);
+    
     const encodedAddress = encodeURIComponent(formattedAddress);
-    const response = await fetch(
-      `https://nominatim.openstreetmap.org/search?` + 
+    const url = `https://nominatim.openstreetmap.org/search?` + 
       `format=json&` +
       `q=${encodedAddress}&` +
       `countrycodes=fr&` +
       `addressdetails=1&` + // Get detailed address info
-      `limit=1`, // Get only the best match
-      {
-        headers: {
-          'User-Agent': 'IAImmo/1.0',
-          'Accept-Language': 'fr'
-        }
+      `limit=1`; // Get only the best match
+    
+    console.log('Making request to:', url);
+    
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'IAImmo/1.0',
+        'Accept-Language': 'fr'
       }
-    );
+    });
     
     if (!response.ok) {
       if (response.status === 429) {
@@ -55,23 +58,24 @@ export async function geocodeAddress(address: string): Promise<{ lat: string; lo
     }
 
     const data = await response.json();
+    console.log('Received geocoding response:', data);
+    
     if (!data.length) {
       console.warn('No coordinates found for address:', formattedAddress);
+      // Essayer avec une version simplifiée de l'adresse (ville uniquement)
+      const cityOnly = formattedAddress.split(',')[0].trim();
+      if (cityOnly !== formattedAddress) {
+        console.log('Retrying with city only:', cityOnly);
+        return geocodeAddress(cityOnly);
+      }
       return null;
     }
 
     const result = data[0];
     
-    // Validate that the result is in France and has good accuracy
+    // Validate that the result is in France
     if (result.address?.country_code?.toLowerCase() !== 'fr') {
       console.warn('Result not in France:', formattedAddress);
-      return null;
-    }
-
-    // Check if we have a precise enough result
-    const importance = parseFloat(result.importance || '0');
-    if (importance < 0.5) {
-      console.warn('Result not precise enough:', formattedAddress, 'importance:', importance);
       return null;
     }
 
