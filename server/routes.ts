@@ -2,102 +2,28 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { db } from "@db";
 import { properties, documents } from "@db/schema";
-import { eq, and, sql, gte } from "drizzle-orm";
+import { eq, and, sql, desc } from "drizzle-orm";
 
+// Helper function to handle rooms filter
 function handleRoomsFilter(rooms: string | undefined) {
   if (!rooms) return null;
   
-  console.log('Processing rooms filter value:', rooms);
-  const roomsValue = parseInt(rooms);
+  const roomNumber = parseInt(rooms);
+  if (isNaN(roomNumber)) return null;
   
-  if (isNaN(roomsValue)) {
-    console.log('Invalid rooms value:', rooms);
-    return null;
+  if (roomNumber >= 5) {
+    return sql`${properties.bedrooms} >= 5`;
+  } else {
+    return eq(properties.bedrooms, roomNumber);
   }
-
-  // Gestion spéciale pour 5+ pièces
-  if (roomsValue === 5) {
-    console.log('Filtering for 5+ pieces');
-    return gte(properties.bedrooms, 5);
-  }
-  
-  // Pour tous les autres cas, utiliser l'égalité exacte
-  console.log('Filtering for exact number of rooms:', roomsValue);
-  return eq(properties.bedrooms, roomsValue);
 }
 
 export function registerRoutes(app: Express): Server {
-  const httpServer = createServer(app);
-
-  // Get properties by transaction type (sale/rent) with filters
-  app.get("/api/properties/transaction/:type", async (req, res) => {
-    try {
-      const transactionType = req.params.type;
-      const { location, type: propertyType, rooms, minPrice, maxPrice } = req.query;
-      
-      // Validate transaction type
-      if (transactionType !== 'sale' && transactionType !== 'rent') {
-        return res.status(400).json({ 
-          message: "Invalid transaction type. Must be either 'sale' or 'rent'." 
-        });
-      }
-
-      console.log(`Fetching properties with filters:`, {
-        transactionType,
-        location,
-        propertyType,
-        rooms,
-        minPrice,
-        maxPrice
-      });
-
-      // Build conditions array
-      let conditions: any[] = [eq(properties.transactionType, transactionType)];
-      
-      if (location && typeof location === 'string') {
-        conditions.push(sql`LOWER(${properties.location}) LIKE LOWER(${'%' + location + '%'})`);
-      }
-      
-      if (propertyType && typeof propertyType === 'string') {
-        conditions.push(eq(properties.type, propertyType));
-      }
-      
-      const roomsCondition = handleRoomsFilter(rooms as string);
-      if (roomsCondition) {
-        conditions.push(roomsCondition);
-      }
-      
-      if (minPrice && !isNaN(parseInt(minPrice as string))) {
-        const minPriceValue = parseInt(minPrice as string);
-        conditions.push(sql`${properties.price} >= ${minPriceValue}`);
-      }
-      
-      if (maxPrice && !isNaN(parseInt(maxPrice as string))) {
-        const maxPriceValue = parseInt(maxPrice as string);
-        conditions.push(sql`${properties.price} <= ${maxPriceValue}`);
-      }
-
-      const filteredProperties = await db
-        .select()
-        .from(properties)
-        .where(and(...conditions))
-        .orderBy(properties.createdAt);
-      
-      console.log(`Found ${filteredProperties.length} properties matching criteria`);
-      return res.json(filteredProperties);
-    } catch (error) {
-      console.error("Error fetching properties:", error);
-      return res.status(500).json({ 
-        message: `Failed to fetch properties for ${req.params.type}` 
-      });
-    }
-  });
-
-  // Get properties with filters (used by home page)
+  // Get all properties with filters
   app.get("/api/properties", async (req, res) => {
     try {
       const { location, type: propertyType, rooms, minPrice, maxPrice, transactionType } = req.query;
-      
+
       // Build conditions array
       let conditions: any[] = [];
       
@@ -132,9 +58,8 @@ export function registerRoutes(app: Express): Server {
         .select()
         .from(properties)
         .where(conditions.length > 0 ? and(...conditions) : undefined)
-        .orderBy(properties.createdAt);
+        .orderBy(desc(properties.createdAt));
       
-      console.log(`Found ${filteredProperties.length} properties matching criteria`);
       return res.json(filteredProperties);
     } catch (error) {
       console.error("Error fetching properties:", error);
@@ -144,27 +69,53 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Get property by ID
-  app.get("/api/properties/:id", async (req, res) => {
+  // Get properties by transaction type with filters
+  app.get("/api/properties/transaction/:type", async (req, res) => {
     try {
-      const propertyId = parseInt(req.params.id);
-      if (isNaN(propertyId)) {
-        return res.status(400).json({ message: "Invalid property ID" });
+      const transactionType = req.params.type;
+      if (transactionType !== 'sale' && transactionType !== 'rent') {
+        return res.status(400).json({ message: "Invalid transaction type" });
       }
 
-      const property = await db.query.properties.findFirst({
-        where: eq(properties.id, propertyId),
-      });
+      const { location, type: propertyType, rooms, minPrice, maxPrice } = req.query;
 
-      if (!property) {
-        return res.status(404).json({ message: "Property not found" });
+      // Build conditions array
+      let conditions: any[] = [eq(properties.transactionType, transactionType)];
+      
+      if (location && typeof location === 'string') {
+        conditions.push(sql`LOWER(${properties.location}) LIKE LOWER(${'%' + location + '%'})`);
+      }
+      
+      if (propertyType && typeof propertyType === 'string') {
+        conditions.push(eq(properties.type, propertyType));
+      }
+      
+      const roomsCondition = handleRoomsFilter(rooms as string);
+      if (roomsCondition) {
+        conditions.push(roomsCondition);
+      }
+      
+      if (minPrice && !isNaN(parseInt(minPrice as string))) {
+        const minPriceValue = parseInt(minPrice as string);
+        conditions.push(sql`${properties.price} >= ${minPriceValue}`);
+      }
+      
+      if (maxPrice && !isNaN(parseInt(maxPrice as string))) {
+        const maxPriceValue = parseInt(maxPrice as string);
+        conditions.push(sql`${properties.price} <= ${maxPriceValue}`);
       }
 
-      return res.json(property);
+      const filteredProperties = await db
+        .select()
+        .from(properties)
+        .where(and(...conditions))
+        .orderBy(desc(properties.createdAt));
+      
+      return res.json(filteredProperties);
     } catch (error) {
-      console.error("Error fetching property:", error);
+      console.error("Error fetching properties:", error);
       return res.status(500).json({ 
-        message: "Failed to fetch property details" 
+        message: "Failed to fetch properties" 
       });
     }
   });
@@ -210,13 +161,38 @@ export function registerRoutes(app: Express): Server {
         .select()
         .from(properties)
         .where(and(...conditions))
-        .orderBy(properties.createdAt);
+        .orderBy(desc(properties.createdAt));
       
       return res.json(filteredProperties);
     } catch (error) {
       console.error("Error fetching agency properties:", error);
       return res.status(500).json({ 
         message: "Failed to fetch agency properties" 
+      });
+    }
+  });
+
+  // Get property by ID
+  app.get("/api/properties/:id", async (req, res) => {
+    try {
+      const propertyId = parseInt(req.params.id);
+      if (isNaN(propertyId)) {
+        return res.status(400).json({ message: "Invalid property ID" });
+      }
+
+      const property = await db.query.properties.findFirst({
+        where: eq(properties.id, propertyId),
+      });
+
+      if (!property) {
+        return res.status(404).json({ message: "Property not found" });
+      }
+
+      return res.json(property);
+    } catch (error) {
+      console.error("Error fetching property:", error);
+      return res.status(500).json({ 
+        message: "Failed to fetch property details" 
       });
     }
   });
@@ -319,5 +295,6 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  const httpServer = createServer(app);
   return httpServer;
 }
