@@ -108,7 +108,7 @@ export function AgencyDashboard() {
                 Nouvelle annonce
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-4xl">
               <DialogHeader>
                 <DialogTitle>
                   {selectedProperty ? "Modifier l'annonce" : "Créer une nouvelle annonce"}

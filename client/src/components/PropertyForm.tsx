@@ -401,7 +401,7 @@ export function PropertyForm({ property, onSuccess }: PropertyFormProps) {
             <FormItem>
               <FormLabel>Caractéristiques</FormLabel>
               <FormControl>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                   {defaultFeatures.map((feature) => (
                     <div key={feature} className="flex items-center space-x-2">
                       <input
