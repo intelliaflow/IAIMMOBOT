@@ -214,18 +214,34 @@ export function registerRoutes(app: Express): Server {
       let attempts = 0;
       const maxAttempts = 3;
 
+      console.log("Début de la géolocalisation pour l'adresse:", propertyData.location);
+
+      // Vérification du format de l'adresse
+      if (!propertyData.location.toLowerCase().includes('france')) {
+        propertyData.location = `${propertyData.location.trim()}, France`;
+        console.log("Adresse formatée avec 'France':", propertyData.location);
+      }
+
       while (!coordinates && attempts < maxAttempts) {
-        coordinates = await geocodeAddress(propertyData.location);
-        if (!coordinates) {
-          console.warn(`Tentative ${attempts + 1}/${maxAttempts} de géocodage échouée pour: ${propertyData.location}`);
-          await new Promise(resolve => setTimeout(resolve, 2000)); // Attendre 2 secondes entre les tentatives
-          attempts++;
+        try {
+          console.log(`Tentative ${attempts + 1}/${maxAttempts} de géocodage...`);
+          coordinates = await geocodeAddress(propertyData.location);
+          
+          if (coordinates) {
+            console.log("Coordonnées obtenues:", coordinates);
+          } else {
+            console.warn(`Tentative ${attempts + 1}/${maxAttempts} échouée`);
+            await new Promise(resolve => setTimeout(resolve, 2000));
+          }
+        } catch (error) {
+          console.error(`Erreur lors du géocodage (tentative ${attempts + 1}):`, error);
+          await new Promise(resolve => setTimeout(resolve, 2000));
         }
+        attempts++;
       }
 
       if (!coordinates) {
-        console.warn(`Impossible de géocoder l'adresse après ${maxAttempts} tentatives: ${propertyData.location}`);
-        // On renvoie une erreur si on ne peut pas géocoder l'adresse
+        console.error(`Échec du géocodage après ${maxAttempts} tentatives pour:`, propertyData.location);
         return res.status(400).json({
           message: "Impossible de géolocaliser cette adresse. Veuillez vérifier que l'adresse est correcte et complète (numéro, rue, code postal, ville, France)."
         });
