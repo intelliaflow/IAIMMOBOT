@@ -57,11 +57,20 @@ export function LocationSearch({ value, onChange, className }: LocationSearchPro
         }
         
         const data = await response.json();
-        const suggestions: LocationSuggestion[] = data.features.map((feature: any) => ({
-          city: feature.properties.label,
-          postcode: feature.properties.postcode,
-          country: "France"
-        }));
+        
+        if (!data || !Array.isArray(data.features)) {
+          console.warn('Invalid response format from API:', data);
+          setSuggestions([]);
+          return;
+        }
+        
+        const suggestions: LocationSuggestion[] = data.features
+          .filter(feature => feature && feature.properties)
+          .map(feature => ({
+            city: feature.properties.label || '',
+            postcode: feature.properties.postcode || '',
+            country: "France"
+          }));
         
         setSuggestions(suggestions);
       } catch (error) {
