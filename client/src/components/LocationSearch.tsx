@@ -51,12 +51,16 @@ export function LocationSearch({
         const data = await response.json();
         console.log("Données reçues:", data);
         
-        if (data.features && data.features.length > 0) {
-          console.log("Suggestions trouvées:", data.features.length);
+        if (data && Array.isArray(data)) {
+          console.log("Format ancien - tableau direct");
+          setSuggestions(data);
+          setShowSuggestions(true);
+        } else if (data.features && Array.isArray(data.features)) {
+          console.log("Format nouveau - avec features");
           setSuggestions(data.features);
           setShowSuggestions(true);
         } else {
-          console.log("Aucune suggestion trouvée");
+          console.warn("Format de données inattendu:", data);
           setSuggestions([]);
         }
       } catch (error) {
@@ -147,23 +151,32 @@ export function LocationSearch({
         )}
         
         {showSuggestions && suggestions.length > 0 && (
-          <div className="absolute z-10 w-full mt-1 bg-white rounded-md shadow-lg border border-gray-200">
+          <div className="absolute z-50 w-full mt-1 bg-white rounded-md shadow-lg border border-gray-200">
             <ul className="py-1">
-              {suggestions.map((feature) => (
-                <li
-                  key={feature.properties.label}
-                  onClick={() => handleSelect(feature)}
-                  className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center"
-                >
-                  <MapPin className="mr-2 h-4 w-4 shrink-0 text-gray-500" />
-                  <div>
-                    <div className="text-sm font-medium">{feature.properties.label}</div>
-                    <div className="text-xs text-gray-500">
-                      {feature.properties.postcode}, {feature.properties.city}
+              {suggestions.map((feature, index) => {
+                console.log("Affichage suggestion:", feature);
+                const label = feature.properties?.label || feature.label || "Adresse inconnue";
+                const postcode = feature.properties?.postcode || feature.postcode;
+                const city = feature.properties?.city || feature.city;
+                
+                return (
+                  <li
+                    key={label + index}
+                    onClick={() => handleSelect(feature)}
+                    className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center"
+                  >
+                    <MapPin className="mr-2 h-4 w-4 shrink-0 text-gray-500" />
+                    <div>
+                      <div className="text-sm font-medium">{label}</div>
+                      {(postcode || city) && (
+                        <div className="text-xs text-gray-500">
+                          {[postcode, city].filter(Boolean).join(", ")}
+                        </div>
+                      )}
                     </div>
-                  </div>
-                </li>
-              ))}
+                  </li>
+                );
+              })}
             </ul>
           </div>
         )}
