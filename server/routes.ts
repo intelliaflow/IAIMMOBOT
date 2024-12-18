@@ -394,7 +394,21 @@ export function registerRoutes(app: Express): Server {
       const propertiesWithoutCoords = await db
         .select()
         .from(properties)
-        .where(sql`${properties.latitude} IS NULL OR ${properties.longitude} IS NULL`);
+        .where(
+          sql`${properties.latitude} IS NULL OR 
+              ${properties.longitude} IS NULL OR
+              ${properties.latitude} = '' OR 
+              ${properties.longitude} = ''`
+        );
+
+      if (!propertiesWithoutCoords || propertiesWithoutCoords.length === 0) {
+        return res.json({
+          message: "No properties need geocoding",
+          total: 0,
+          success: 0,
+          errors: 0
+        });
+      }
 
       console.log(`Found ${propertiesWithoutCoords.length} properties needing geocoding`);
 
