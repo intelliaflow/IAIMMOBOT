@@ -15,18 +15,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Plus, Upload, Pencil } from "lucide-react";
 import { PropertyForm } from "@/components/PropertyForm";
+import { GeocodeButton } from "@/components/GeocodeButton";
 import type { Property } from "@db/schema";
 
 export function AgencyDashboard() {
   const queryClient = useQueryClient();
-  const [currentSearchParams, setCurrentSearchParams] = useState<SearchParams>({
-    location: '',
-    propertyType: '',
-    rooms: '',
-    minPrice: 0,
-    maxPrice: 0,
-    transactionType: undefined
-  });
+  const [currentSearchParams, setCurrentSearchParams] = useState<SearchParams>({});
   
   const { data: properties, isLoading } = useQuery<Property[]>({
     queryKey: ["/api/properties/agency", currentSearchParams],
@@ -56,8 +50,8 @@ export function AgencyDashboard() {
       return data;
     },
     enabled: true,
-    staleTime: 1000, // Consider data fresh for 1 second
-    gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
+    staleTime: 1000,
+    gcTime: 5 * 60 * 1000,
   });
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -89,25 +83,28 @@ export function AgencyDashboard() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">Tableau de bord</h1>
-        <Dialog open={isPropertyFormOpen} onOpenChange={setIsPropertyFormOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={handleCreateProperty}>
-              <Plus className="h-4 w-4 mr-2" />
-              Nouvelle annonce
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>
-                {selectedProperty ? "Modifier l'annonce" : "Créer une nouvelle annonce"}
-              </DialogTitle>
-            </DialogHeader>
-            <PropertyForm 
-              property={selectedProperty} 
-              onSuccess={handlePropertyFormSuccess}
-            />
-          </DialogContent>
-        </Dialog>
+        <div className="flex gap-4">
+          <GeocodeButton />
+          <Dialog open={isPropertyFormOpen} onOpenChange={setIsPropertyFormOpen}>
+            <DialogTrigger asChild>
+              <Button onClick={handleCreateProperty}>
+                <Plus className="h-4 w-4 mr-2" />
+                Nouvelle annonce
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>
+                  {selectedProperty ? "Modifier l'annonce" : "Créer une nouvelle annonce"}
+                </DialogTitle>
+              </DialogHeader>
+              <PropertyForm 
+                property={selectedProperty} 
+                onSuccess={handlePropertyFormSuccess}
+              />
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <Tabs defaultValue="properties">
