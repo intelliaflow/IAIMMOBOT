@@ -19,7 +19,14 @@ import type { Property } from "@db/schema";
 
 export function AgencyDashboard() {
   const queryClient = useQueryClient();
-  const [currentSearchParams, setCurrentSearchParams] = useState<SearchParams>({});
+  const [currentSearchParams, setCurrentSearchParams] = useState<SearchParams>({
+    location: '',
+    propertyType: '',
+    rooms: '',
+    minPrice: 0,
+    maxPrice: 0,
+    transactionType: undefined
+  });
   
   const { data: properties, isLoading } = useQuery<Property[]>({
     queryKey: ["/api/properties/agency", currentSearchParams],
@@ -50,7 +57,7 @@ export function AgencyDashboard() {
     },
     enabled: true,
     staleTime: 1000, // Consider data fresh for 1 second
-    cacheTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
+    gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
   });
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);

@@ -13,11 +13,17 @@ export function PropertyCard({ property }: PropertyCardProps) {
     <Link href={`/property/${property.id}`}>
       <Card className="hover:shadow-lg transition-shadow cursor-pointer">
         <div className="aspect-[16/9] relative overflow-hidden rounded-t-lg">
-          <img
-            src={property.images[0]}
-            alt={property.title}
-            className="object-cover w-full h-full"
-          />
+          {property.images && property.images[0] ? (
+            <img
+              src={property.images[0]}
+              alt={property.title}
+              className="object-cover w-full h-full"
+            />
+          ) : (
+            <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+              <span className="text-gray-400">Aucune image</span>
+            </div>
+          )}
           <Badge className="absolute top-2 right-2">
             {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(property.price)}
           </Badge>
@@ -41,7 +47,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
           </div>
         </CardContent>
         <CardFooter className="text-sm text-gray-500">
-          {new Date(property.createdAt).toLocaleDateString('fr-FR')}
+          {property.createdAt ? new Date(property.createdAt).toLocaleDateString('fr-FR') : 'Date non disponible'}
         </CardFooter>
       </Card>
     </Link>
