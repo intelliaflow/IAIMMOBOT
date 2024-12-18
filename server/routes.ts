@@ -385,8 +385,9 @@ export function registerRoutes(app: Express): Server {
       
       // Filtrer les propriétés sans coordonnées valides
       const propertiesWithoutCoords = allProperties.filter(p => 
-        !p.latitude || !p.longitude || 
-        p.latitude.trim() === '' || p.longitude.trim() === ''
+        p.latitude === null || p.longitude === null ||
+        p.latitude === undefined || p.longitude === undefined ||
+        p.latitude === '' || p.longitude === ''
       );
 
       console.log(`Properties needing geocoding: ${propertiesWithoutCoords.length}`);

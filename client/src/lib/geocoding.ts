@@ -17,6 +17,7 @@ export async function geocodeAddress(address: string): Promise<{ lat: string; lo
     console.error('No address provided for geocoding');
     return null;
   }
+  console.log('Starting geocoding for address:', address);
   try {
     // Check cache first
     const cachedResult = geocodingCache.get(address);
