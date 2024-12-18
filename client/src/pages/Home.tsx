@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { PropertyCard } from "@/components/PropertyCard";
+import { PriceHeatMap } from "@/components/PriceHeatMap";
 import { SearchFilters } from "@/components/SearchFilters";
 import type { Property } from "@db/schema";
 import type { SearchParams } from "@/components/SearchFilters";
@@ -76,6 +77,16 @@ export function Home() {
               }}
             />
           </div>
+        </div>
+      </section>
+
+      {/* Price Heat Map Section */}
+      <section className="py-16 bg-gradient-to-r from-primary/5 to-primary/10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl font-bold text-gray-900 mb-8">
+            Analyse des prix par zone
+          </h2>
+          {properties && <PriceHeatMap properties={properties} />}
         </div>
       </section>
 
