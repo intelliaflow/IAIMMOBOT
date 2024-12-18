@@ -70,7 +70,7 @@ export function PriceMap({ properties }: PriceMapProps) {
                   <Link href={`/property/${property.id}`}>
                     <div className="cursor-pointer">
                       <h3 className="font-semibold mb-1">{property.title}</h3>
-                      <p className="text-sm text-gray-600 mb-2">{formatAddress(property.location)}</p>
+                      <p className="text-sm text-gray-600 mb-2">{formatAddress(property.location, false)}</p>
                       <Badge>
                         {new Intl.NumberFormat('fr-FR', { 
                           style: 'currency', 
