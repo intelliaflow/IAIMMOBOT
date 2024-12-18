@@ -47,14 +47,23 @@ export function LocationSearch({ value, onChange, className }: LocationSearchPro
     const fetchSuggestions = async () => {
       setLoading(true);
       try {
-        // Simulation d'appel API - À remplacer par une vraie API de géocodage
-        await new Promise(resolve => setTimeout(resolve, 500));
-        const mockSuggestions: LocationSuggestion[] = [
-          { city: `${debouncedValue} - Centre`, postcode: "75001", country: "France" },
-          { city: `${debouncedValue} - Nord`, postcode: "75002", country: "France" },
-          { city: `${debouncedValue} - Sud`, postcode: "75003", country: "France" },
-        ];
-        setSuggestions(mockSuggestions);
+        const encodedValue = encodeURIComponent(debouncedValue);
+        const response = await fetch(
+          `https://api-adresse.data.gouv.fr/search/?q=${encodedValue}&limit=5`
+        );
+        
+        if (!response.ok) {
+          throw new Error("Erreur lors de la recherche d'adresses");
+        }
+        
+        const data = await response.json();
+        const suggestions: LocationSuggestion[] = data.features.map((feature: any) => ({
+          city: feature.properties.label,
+          postcode: feature.properties.postcode,
+          country: "France"
+        }));
+        
+        setSuggestions(suggestions);
       } catch (error) {
         console.error("Erreur lors de la recherche de suggestions:", error);
         setSuggestions([]);

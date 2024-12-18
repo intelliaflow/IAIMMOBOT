@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { LocationSearch } from "@/components/LocationSearch";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import type { Property } from "@db/schema";
@@ -285,18 +286,15 @@ export function PropertyForm({ property, onSuccess }: PropertyFormProps) {
               <FormItem>
                 <FormLabel>Localisation</FormLabel>
                 <FormControl>
-                  <Input 
-                    placeholder="Numéro, rue, code postal, ville" 
-                    {...field}
-                    onChange={(e) => {
-                      field.onChange(e.target.value);
+                  <LocationSearch 
+                    value={field.value}
+                    onChange={(value) => {
+                      field.onChange(value);
                     }}
+                    className="w-full"
                   />
                 </FormControl>
                 <FormMessage />
-                <p className="text-sm text-muted-foreground">
-                  Format: 123 rue Example, 75001 Paris, France
-                </p>
               </FormItem>
             )}
           />
