@@ -419,29 +419,58 @@ export function PropertyForm({ property, onSuccess }: PropertyFormProps) {
                   <div className="grid grid-cols-3 gap-4">
                     {form.getValues('images')?.map((url, index) => (
                       <div key={url} className="relative group">
-                        <img
-                          src={url}
-                          alt={`Image ${index + 1}`}
-                          className="w-full h-32 object-cover rounded-lg"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => removeImage(index)}
-                          className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
+                        <div className="relative h-32">
+                          <img
+                            src={url}
+                            alt={`Image ${index + 1}`}
+                            className={`w-full h-32 object-cover rounded-lg transition-opacity duration-200 ${isUploading ? 'opacity-50' : ''}`}
+                            onLoad={(e) => {
+                              (e.target as HTMLImageElement).classList.remove('opacity-0');
+                              (e.target as HTMLImageElement).classList.add('opacity-100');
+                            }}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeImage(index)}
+                            className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50"
+                            disabled={isUploading}
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
                 )}
-                <Input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={handleImageUpload}
-                  disabled={isUploading}
-                />
+                {isUploading && form.getValues('images')?.length === 0 && (
+                  <div className="grid grid-cols-3 gap-4">
+                    {[...Array(3)].map((_, index) => (
+                      <div key={index} className="animate-pulse">
+                        <div className="bg-gray-200 h-32 rounded-lg" />
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <div className="relative">
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleImageUpload}
+                    disabled={isUploading}
+                    className={isUploading ? 'opacity-50' : ''}
+                  />
+                  {isUploading && (
+                    <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-r-transparent" />
+                    </div>
+                  )}
+                </div>
+                {isUploading && (
+                  <p className="text-sm text-muted-foreground animate-pulse mt-2">
+                    Téléchargement des images en cours...
+                  </p>
+                )}
               </div>
             </FormControl>
             <FormMessage />
@@ -450,9 +479,16 @@ export function PropertyForm({ property, onSuccess }: PropertyFormProps) {
           <Button 
             type="submit" 
             disabled={createProperty.isPending || updateProperty.isPending || isUploading}
-            className="w-full"
+            className="w-full relative"
           >
-            {isUploading ? "Téléchargement des images..." : property ? "Modifier le bien" : "Créer le bien"}
+            {(createProperty.isPending || updateProperty.isPending) && (
+              <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-r-transparent" />
+              </span>
+            )}
+            <span className={`${(createProperty.isPending || updateProperty.isPending) ? 'opacity-0' : 'opacity-100'}`}>
+              {isUploading ? "Téléchargement des images..." : property ? "Modifier le bien" : "Créer le bien"}
+            </span>
           </Button>
         </div>
       </form>
