@@ -46,11 +46,16 @@ export function LocationSearch({
           searchValue = `${searchValue}, France`;
         }
         
-        const encodedValue = encodeURIComponent(searchValue);
+        // Nettoyer et formater la requête
+        const query = searchValue
+          .trim()
+          .replace(/\s+/g, ' ') // Remplacer les espaces multiples par un seul espace
+          .toLowerCase();
+        
+        const encodedValue = encodeURIComponent(query);
         const url = `https://api-adresse.data.gouv.fr/search/?` + 
           `q=${encodedValue}&` +
           `limit=5&` +
-          `type=housenumber,street&` +
           `autocomplete=1`;
         
         console.log("URL de l'API:", url);
