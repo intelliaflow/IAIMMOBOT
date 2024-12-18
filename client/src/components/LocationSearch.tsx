@@ -116,7 +116,16 @@ export function LocationSearch({
 
   return (
     <div className={cn("flex gap-2", className)}>
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover 
+        open={open} 
+        onOpenChange={(isOpen) => {
+          // Ne pas fermer le Popover si l'input a le focus
+          if (!isOpen && document.activeElement === document.querySelector('input')) {
+            return;
+          }
+          setOpen(isOpen);
+        }}
+      >
         <PopoverTrigger asChild>
           <Button
             variant="outline"
@@ -128,9 +137,9 @@ export function LocationSearch({
               value={inputValue}
               onChange={(e) => {
                 setInputValue(e.target.value);
-                setOpen(true);
+                if (!open) setOpen(true);
               }}
-              onClick={() => setOpen(true)}
+              onFocus={() => setOpen(true)}
               placeholder="Rechercher une adresse..."
               className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-0"
             />
