@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { X } from "lucide-react";
@@ -50,7 +51,26 @@ export function PropertyForm({ property, onSuccess }: PropertyFormProps) {
     "Interphone",
     "Fibre optique",
     "Double vitrage",
-    "Climatisation"
+    "Climatisation",
+    "Piscine",
+    "Jardin",
+    "Cuisine équipée",
+    "Salle de sport",
+    "Buanderie",
+    "Dressing",
+    "Cheminée",
+    "Véranda",
+    "Jacuzzi",
+    "Alarme",
+    "Portail électrique",
+    "Caméras de surveillance",
+    "Stores électriques",
+    "Cuisine américaine",
+    "Vue mer",
+    "Vue montagne",
+    "Proche commerces",
+    "Proche écoles",
+    "Proche transports"
   ];
 
   const form = useForm<PropertyFormValues>({
@@ -205,7 +225,8 @@ export function PropertyForm({ property, onSuccess }: PropertyFormProps) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <ScrollArea className="h-[600px] px-1">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField
           control={form.control}
           name="title"
@@ -435,6 +456,7 @@ export function PropertyForm({ property, onSuccess }: PropertyFormProps) {
           </Button>
         </div>
       </form>
+      </ScrollArea>
     </Form>
   );
 }
