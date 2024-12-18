@@ -1,14 +1,12 @@
 import { useState, useEffect } from "react";
 import { useDebounce } from "use-debounce";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { MapPin, Loader2 } from "lucide-react";
 import {
   Command,
   CommandEmpty,
   CommandGroup,
-  CommandInput,
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
@@ -17,64 +15,50 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import type { AddressFeature, AddressResponse } from "@/lib/types/address";
 
 interface LocationSearchProps {
   value: string;
   onChange: (value: string) => void;
   className?: string;
+  onLocationSelect?: (feature: AddressFeature) => void;
 }
 
-interface LocationSuggestion {
-  city: string;
-  postcode: string;
-  country: string;
-}
-
-export function LocationSearch({ value, onChange, className }: LocationSearchProps) {
+export function LocationSearch({ 
+  value, 
+  onChange, 
+  className,
+  onLocationSelect 
+}: LocationSearchProps) {
   const [open, setOpen] = useState(false);
-  const [inputValue, setInputValue] = useState(value);
+  const [inputValue, setInputValue] = useState(value || "");
   const [debouncedValue] = useDebounce(inputValue, 500);
-  const [suggestions, setSuggestions] = useState<LocationSuggestion[]>([]);
+  const [suggestions, setSuggestions] = useState<AddressFeature[]>([]);
   const [loading, setLoading] = useState(false);
-  const [userLocation, setUserLocation] = useState<GeolocationPosition | null>(null);
 
   useEffect(() => {
-    if (debouncedValue.length < 2) {
-      setSuggestions([]);
-      return;
-    }
-
     const fetchSuggestions = async () => {
+      if (!debouncedValue || debouncedValue.length < 2) {
+        setSuggestions([]);
+        return;
+      }
+
       setLoading(true);
       try {
         const encodedValue = encodeURIComponent(debouncedValue);
         const response = await fetch(
-          `https://api-adresse.data.gouv.fr/search/?q=${encodedValue}&limit=5`
+          `https://api-adresse.data.gouv.fr/search/?q=${encodedValue}&limit=5&type=housenumber,street`
         );
-        
+
         if (!response.ok) {
-          throw new Error("Erreur lors de la recherche d'adresses");
+          throw new Error(`Erreur HTTP: ${response.status}`);
         }
-        
-        const data = await response.json();
-        
-        if (!data || !Array.isArray(data.features)) {
-          console.warn('Invalid response format from API:', data);
-          setSuggestions([]);
-          return;
-        }
-        
-        const suggestions: LocationSuggestion[] = data.features
-          .filter(feature => feature && feature.properties)
-          .map(feature => ({
-            city: feature.properties.label || '',
-            postcode: feature.properties.postcode || '',
-            country: "France"
-          }));
-        
-        setSuggestions(suggestions);
+
+        const data: AddressResponse = await response.json();
+        setSuggestions(data.features || []);
       } catch (error) {
-        console.error("Erreur lors de la recherche de suggestions:", error);
+        console.error("Erreur lors de la recherche d'adresses:", error);
         setSuggestions([]);
       } finally {
         setLoading(false);
@@ -84,94 +68,112 @@ export function LocationSearch({ value, onChange, className }: LocationSearchPro
     fetchSuggestions();
   }, [debouncedValue]);
 
-  const getCurrentLocation = () => {
-    if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setUserLocation(position);
-          // Ici, vous pouvez faire un appel à une API de géocodage inverse
-          // pour obtenir l'adresse à partir des coordonnées
-          setInputValue("Ma position actuelle");
-          onChange("Ma position actuelle");
-          setOpen(false);
-        },
-        (error) => {
-          console.error("Erreur de géolocalisation:", error);
-        }
-      );
+  const handleSelect = (feature: AddressFeature) => {
+    const selectedValue = feature.properties.label;
+    setInputValue(selectedValue);
+    onChange(selectedValue);
+    if (onLocationSelect) {
+      onLocationSelect(feature);
     }
+    setOpen(false);
+  };
+
+  const handleGeolocation = () => {
+    if (!("geolocation" in navigator)) {
+      console.warn("La géolocalisation n'est pas supportée par votre navigateur");
+      return;
+    }
+
+    setLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          const response = await fetch(
+            `https://api-adresse.data.gouv.fr/reverse/?lon=${longitude}&lat=${latitude}`
+          );
+
+          if (!response.ok) {
+            throw new Error("Erreur lors de la géolocalisation inverse");
+          }
+
+          const data: AddressResponse = await response.json();
+          if (data.features && data.features.length > 0) {
+            handleSelect(data.features[0]);
+          }
+        } catch (error) {
+          console.error("Erreur lors de la géolocalisation:", error);
+        } finally {
+          setLoading(false);
+        }
+      },
+      (error) => {
+        console.error("Erreur de géolocalisation:", error);
+        setLoading(false);
+      }
+    );
   };
 
   return (
-    <div className="w-full space-y-2">
-      <Label htmlFor="location" className="text-lg font-semibold">
-        Où souhaitez-vous chercher ?
-      </Label>
-      <div className="relative">
-        <Popover open={open} onOpenChange={setOpen}>
-          <PopoverTrigger asChild>
-            <div className="relative">
-              <Input
-                id="location"
-                value={inputValue}
-                onChange={(e) => {
-                  setInputValue(e.target.value);
-                  setOpen(true);
-                }}
-                className={`w-full h-12 text-lg pl-4 pr-10 border-2 focus:border-primary ${className}`}
-                placeholder="Ville, code postal ou quartier"
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="absolute right-2 top-1/2 -translate-y-1/2"
-                onClick={getCurrentLocation}
-              >
-                <MapPin className="h-5 w-5" />
-              </Button>
-            </div>
-          </PopoverTrigger>
-          <PopoverContent className="w-full p-0" align="start">
-            <Command>
-              <CommandList>
-                {loading ? (
-                  <CommandEmpty>
-                    <Loader2 className="h-4 w-4 animate-spin mx-auto" />
-                    <span className="text-sm text-muted-foreground">
-                      Recherche en cours...
-                    </span>
-                  </CommandEmpty>
-                ) : suggestions.length === 0 ? (
-                  <CommandEmpty>Aucune suggestion trouvée</CommandEmpty>
-                ) : (
-                  <CommandGroup>
-                    {suggestions.map((suggestion, index) => (
-                      <CommandItem
-                        key={index}
-                        value={suggestion.city}
-                        onSelect={(value) => {
-                          setInputValue(value);
-                          onChange(value);
-                          setOpen(false);
-                        }}
-                      >
-                        <MapPin className="h-4 w-4 mr-2" />
-                        <div className="flex flex-col">
-                          <span>{suggestion.city}</span>
-                          <span className="text-sm text-muted-foreground">
-                            {suggestion.postcode}, {suggestion.country}
-                          </span>
-                        </div>
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                )}
-              </CommandList>
-            </Command>
-          </PopoverContent>
-        </Popover>
-      </div>
+    <div className={cn("flex gap-2", className)}>
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            role="combobox"
+            aria-expanded={open}
+            className="w-full justify-between"
+          >
+            <Input
+              value={inputValue}
+              onChange={(e) => {
+                setInputValue(e.target.value);
+                setOpen(true);
+              }}
+              onClick={() => setOpen(true)}
+              placeholder="Rechercher une adresse..."
+              className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-0"
+            />
+            {loading && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-full p-0" align="start">
+          <Command>
+            <CommandList>
+              {suggestions.length === 0 ? (
+                <CommandEmpty>Aucune suggestion trouvée</CommandEmpty>
+              ) : (
+                <CommandGroup>
+                  {suggestions.map((feature) => (
+                    <CommandItem
+                      key={feature.properties.label}
+                      value={feature.properties.label}
+                      onSelect={() => handleSelect(feature)}
+                    >
+                      <MapPin className="mr-2 h-4 w-4 shrink-0" />
+                      <div className="flex flex-col">
+                        <span>{feature.properties.label}</span>
+                        <span className="text-sm text-muted-foreground">
+                          {feature.properties.postcode}, {feature.properties.city}
+                        </span>
+                      </div>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              )}
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={handleGeolocation}
+        disabled={loading}
+        title="Utiliser ma position"
+      >
+        <MapPin className="h-4 w-4" />
+      </Button>
     </div>
   );
 }
