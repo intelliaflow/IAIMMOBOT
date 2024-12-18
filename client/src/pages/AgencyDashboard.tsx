@@ -6,21 +6,37 @@ import {
   CardHeader,
   CardTitle 
 } from "@/components/ui/card";
-import type { SearchParams } from "@/components/SearchFilters";
-import { SearchFilters } from "@/components/SearchFilters";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Plus, Upload, Pencil } from "lucide-react";
+import { SearchFilters } from "@/components/SearchFilters";
 import { PropertyForm } from "@/components/PropertyForm";
 import { GeocodeButton } from "@/components/GeocodeButton";
 import type { Property } from "@db/schema";
+import type { SearchParams } from "@/components/SearchFilters";
+
+interface ExtendedSearchParams extends SearchParams {
+  location?: string;
+  propertyType?: string;
+  rooms?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  transactionType?: 'sale' | 'rent';
+}
 
 export function AgencyDashboard() {
   const queryClient = useQueryClient();
-  const [currentSearchParams, setCurrentSearchParams] = useState<SearchParams>({});
+  const [currentSearchParams, setCurrentSearchParams] = useState<ExtendedSearchParams>({
+    location: undefined,
+    propertyType: undefined,
+    rooms: undefined,
+    minPrice: undefined,
+    maxPrice: undefined,
+    transactionType: undefined
+  });
   
   const { data: properties, isLoading } = useQuery<Property[]>({
     queryKey: ["/api/properties/agency", currentSearchParams],
@@ -120,7 +136,7 @@ export function AgencyDashboard() {
                 showTransactionTypeFilter={true}
                 onSearch={(params) => {
                   console.log('Search filters updated:', params);
-                  setCurrentSearchParams(params);
+                  setCurrentSearchParams(params as ExtendedSearchParams);
                   queryClient.invalidateQueries({ 
                     queryKey: ["/api/properties/agency", params],
                     exact: true

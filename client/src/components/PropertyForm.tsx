@@ -30,7 +30,7 @@ const propertySchema = z.object({
 type PropertyFormValues = z.infer<typeof propertySchema>;
 
 interface PropertyFormProps {
-  property?: Partial<Property>;
+  property?: Property | null;
   onSuccess?: () => void;
 }
 
