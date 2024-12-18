@@ -216,10 +216,18 @@ export function PropertyForm({ property, onSuccess }: PropertyFormProps) {
   };
 
   async function onSubmit(data: PropertyFormValues) {
+    // Format address to ensure good geocoding
+    const formattedData = {
+      ...data,
+      location: !data.location.toLowerCase().trim().endsWith('france')
+        ? `${data.location.trim()}, France`
+        : data.location.trim()
+    };
+
     if (property) {
-      updateProperty.mutate(data);
+      updateProperty.mutate(formattedData);
     } else {
-      createProperty.mutate(data);
+      createProperty.mutate(formattedData);
     }
   }
 
@@ -281,16 +289,7 @@ export function PropertyForm({ property, onSuccess }: PropertyFormProps) {
                     placeholder="Numéro, rue, code postal, ville" 
                     {...field}
                     onChange={(e) => {
-                      // Format address to ensure good geocoding
-                      const value = e.target.value;
-                      let formattedValue = value;
-                      
-                      // If address doesn't end with ", France", add it
-                      if (!value.toLowerCase().trim().endsWith('france')) {
-                        formattedValue = value.trim() + ', France';
-                      }
-                      
-                      field.onChange(formattedValue);
+                      field.onChange(e.target.value);
                     }}
                   />
                 </FormControl>
