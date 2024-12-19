@@ -22,17 +22,10 @@ import {
   Home,
   Euro,
   MapPin,
-  Square,
   Grid2X2,
   SlidersHorizontal,
   ChevronDown
 } from "lucide-react";
-
-interface SearchFiltersProps {
-  transactionType?: 'sale' | 'rent';
-  showTransactionTypeFilter?: boolean;
-  onSearch?: (params: SearchParams) => void;
-}
 
 export interface SearchParams {
   location?: string;
@@ -50,13 +43,20 @@ interface SearchFiltersProps {
   onSearch?: (params: SearchParams) => void;
 }
 
+interface SearchFiltersProps {
+  transactionType?: 'sale' | 'rent';
+  showTransactionTypeFilter?: boolean;
+  maxPropertyPrice?: number;
+  onSearch?: (params: SearchParams) => void;
+}
+
 function FilterButton({ 
   icon: Icon, 
   label, 
   value, 
   onClick 
 }: { 
-  icon: any, 
+  icon: React.ElementType,
   label: string, 
   value?: string, 
   onClick?: () => void 
@@ -86,22 +86,29 @@ export function SearchFilters({
   const [propertyType, setPropertyType] = useState<string>();
   const [rooms, setRooms] = useState<string>();
   const [selectedTransactionType, setSelectedTransactionType] = useState<'sale' | 'rent' | undefined>(transactionType);
-  const defaultMaxPrice = maxPropertyPrice > 0 ? maxPropertyPrice : (transactionType === 'rent' ? 5000 : 1000000);
-  const [priceRange, setPriceRange] = useState([0, defaultMaxPrice]);
-
-  // Reset price range when transaction type changes
-  useEffect(() => {
-    const newMaxPrice = selectedTransactionType === 'rent' ? 5000 : maxPropertyPrice;
-    setPriceRange([0, newMaxPrice]);
+  
+  const getDefaultMaxPrice = useCallback(() => {
+    if (maxPropertyPrice && maxPropertyPrice > 0) {
+      return maxPropertyPrice;
+    }
+    return selectedTransactionType === 'rent' ? 5000 : 1000000;
   }, [selectedTransactionType, maxPropertyPrice]);
+
+  const [priceRange, setPriceRange] = useState([0, getDefaultMaxPrice()]);
+
+  useEffect(() => {
+    const newMaxPrice = getDefaultMaxPrice();
+    setPriceRange([0, newMaxPrice]);
+  }, [selectedTransactionType, maxPropertyPrice, getDefaultMaxPrice]);
+
   const [isSearching, setIsSearching] = useState(false);
   const { toast } = useToast();
 
-  // Fonction de recherche simplifiée
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSearch = async (e?: React.FormEvent) => {
+    if (e) {
+      e.preventDefault();
+    }
     
-    // Construction des paramètres de recherche
     const searchParams: SearchParams = {};
     
     if (location?.trim()) {
@@ -120,7 +127,7 @@ export function SearchFilters({
       searchParams.minPrice = priceRange[0];
     }
     
-    if (priceRange[1] < 1000000) {
+    if (priceRange[1] < getDefaultMaxPrice()) {
       searchParams.maxPrice = priceRange[1];
     }
     
@@ -128,18 +135,12 @@ export function SearchFilters({
       searchParams.transactionType = selectedTransactionType || transactionType;
     }
 
-    console.log('Recherche avec les paramètres:', searchParams);
-    
     if (onSearch) {
       setIsSearching(true);
       try {
-        // Force la mise à jour des paramètres de recherche dans le cache
         queryClient.setQueryData(['searchParams'], searchParams);
-        
-        // Attendre que la recherche soit terminée
         await onSearch(searchParams);
         
-        // Forcer un rafraîchissement global des requêtes de propriétés
         await Promise.all([
           queryClient.refetchQueries({ queryKey: ['/api/properties'] }),
           queryClient.refetchQueries({ queryKey: ['/api/properties/transaction/sale'] }),
@@ -164,196 +165,177 @@ export function SearchFilters({
   };
 
   const FilterForm = useCallback(() => (
-    <div className="space-y-8">
-        {/* Section Localisation avec auto-complétion */}
-        <LocationSearch
-          value={location}
-          onChange={setLocation}
-          className="w-full"
-        />
+    <div className="space-y-6">
+      <LocationSearch
+        value={location}
+        onChange={setLocation}
+        className="w-full"
+      />
 
-          {/* Type de transaction - Plus visible si activé */}
-          {showTransactionTypeFilter && (
-            <div className="space-y-2">
-              <Label htmlFor="transactionType" className="text-lg font-semibold">
-                Type de transaction
-              </Label>
-              <div className="grid grid-cols-2 gap-4">
-                <Button
-                  type="button"
-                  variant={selectedTransactionType === 'sale' ? 'default' : 'outline'}
-                  className="w-full h-12 text-lg"
-                  onClick={() => setSelectedTransactionType('sale')}
-                >
-                  Acheter
-                </Button>
-                <Button
-                  type="button"
-                  variant={selectedTransactionType === 'rent' ? 'default' : 'outline'}
-                  className="w-full h-12 text-lg"
-                  onClick={() => setSelectedTransactionType('rent')}
-                >
-                  Louer
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {/* Filtres principaux - Réorganisés et simplifiés */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Type de bien */}
-            <div className="space-y-2">
-              <Label htmlFor="propertyType" className="text-base font-medium">
-                Type de bien
-              </Label>
-              <Select value={propertyType} onValueChange={setPropertyType}>
-                <SelectTrigger id="propertyType" className="h-12">
-                  <SelectValue placeholder="Tous types de biens" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="apartment">Appartement</SelectItem>
-                  <SelectItem value="house">Maison</SelectItem>
-                  <SelectItem value="villa">Villa</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Nombre de pièces */}
-            <div className="space-y-2">
-              <Label htmlFor="rooms" className="text-base font-medium">
-                Nombre de pièces
-              </Label>
-              <Select value={rooms} onValueChange={setRooms}>
-                <SelectTrigger id="rooms" className="h-12">
-                  <SelectValue placeholder="Toutes tailles" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1">Studio/T1</SelectItem>
-                  <SelectItem value="2">2 pièces</SelectItem>
-                  <SelectItem value="3">3 pièces</SelectItem>
-                  <SelectItem value="4">4 pièces</SelectItem>
-                  <SelectItem value="5">5 pièces et +</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* Budget - Interface améliorée */}
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <Label className="text-lg font-semibold">Budget</Label>
-              <span className="text-base font-medium text-primary">
-                {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(priceRange[0])} - 
-                {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(priceRange[1])}
-              </span>
-            </div>
-            <div className="pt-6 pb-4">
-              <div className="relative pt-6 pb-4">
-                <div className="relative">
-                  <Slider
-                    defaultValue={[0, 1000000]}
-                    max={1000000}
-                    step={100}
-                    value={priceRange}
-                    onValueChange={setPriceRange}
-                    className="mt-6 touch-none cursor-grab active:cursor-grabbing"
-                    aria-label="Prix"
-                    minStepsBetweenThumbs={5000}
-                  />
-                  <div className="absolute -top-6 left-0 right-0">
-                    <div 
-                      className="absolute text-sm font-medium text-primary w-20 text-center transform -translate-x-1/2"
-                      style={{ 
-                        left: `${(priceRange[0] / 1000000) * 100}%`,
-                      }}
-                    >
-                      {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(priceRange[0])}
-                    </div>
-                    <div 
-                      className="absolute text-sm font-medium text-primary w-20 text-center transform -translate-x-1/2"
-                      style={{ 
-                        left: `${(priceRange[1] / 1000000) * 100}%`,
-                      }}
-                    >
-                      {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(priceRange[1])}
-                    </div>
-                  </div>
-                  <div className="flex justify-between items-center mt-2 text-xs text-muted-foreground">
-                    <span>0 €</span>
-                    <span>250k €</span>
-                    <span>500k €</span>
-                    <span>750k €</span>
-                    <span>1M €</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Boutons de recherche et réinitialisation */}
-          <div className="grid grid-cols-2 gap-4 mt-6">
-            <Button 
-              type="submit" 
-              className="h-14 text-lg font-semibold" 
-              disabled={isSearching}
-            >
-              {isSearching ? (
-                <div className="flex items-center justify-center">
-                  <span className="mr-2">Recherche en cours</span>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                </div>
-              ) : (
-                "Rechercher"
-              )}
-            </Button>
-            <Button 
+      {showTransactionTypeFilter && (
+        <div className="space-y-2">
+          <Label htmlFor="transactionType" className="text-lg font-semibold">
+            Type de transaction
+          </Label>
+          <div className="grid grid-cols-2 gap-4">
+            <Button
               type="button"
-              variant="outline"
-              className="h-14 text-lg font-semibold"
-              onClick={() => {
-                // Réinitialiser les états locaux
-                setLocation("");
-                setPropertyType(undefined);
-                setRooms(undefined);
-                setPriceRange([0, 1000000]);
-                setSelectedTransactionType(transactionType);
-                
-                // Réinitialiser les paramètres de recherche
-                const resetParams: SearchParams = {};
-                if (transactionType) {
-                  resetParams.transactionType = transactionType;
-                }
-                
-                if (onSearch) {
-                  onSearch(resetParams);
-                }
-              }}
+              variant={selectedTransactionType === 'sale' ? 'default' : 'outline'}
+              className="w-full h-12 text-lg"
+              onClick={() => setSelectedTransactionType('sale')}
             >
-              Réinitialiser
+              Acheter
+            </Button>
+            <Button
+              type="button"
+              variant={selectedTransactionType === 'rent' ? 'default' : 'outline'}
+              className="w-full h-12 text-lg"
+              onClick={() => setSelectedTransactionType('rent')}
+            >
+              Louer
             </Button>
           </div>
         </div>
+      )}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-2">
+          <Label htmlFor="propertyType" className="text-base font-medium">
+            Type de bien
+          </Label>
+          <Select value={propertyType} onValueChange={setPropertyType}>
+            <SelectTrigger id="propertyType" className="h-12">
+              <SelectValue placeholder="Tous types de biens" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="apartment">Appartement</SelectItem>
+              <SelectItem value="house">Maison</SelectItem>
+              <SelectItem value="villa">Villa</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="rooms" className="text-base font-medium">
+            Nombre de pièces
+          </Label>
+          <Select value={rooms} onValueChange={setRooms}>
+            <SelectTrigger id="rooms" className="h-12">
+              <SelectValue placeholder="Toutes tailles" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="1">Studio/T1</SelectItem>
+              <SelectItem value="2">2 pièces</SelectItem>
+              <SelectItem value="3">3 pièces</SelectItem>
+              <SelectItem value="4">4 pièces</SelectItem>
+              <SelectItem value="5">5 pièces et +</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <Label className="text-lg font-semibold">Budget</Label>
+          <span className="text-base font-medium text-primary">
+            {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(priceRange[0])} - 
+            {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(priceRange[1])}
+          </span>
+        </div>
+        <div className="pt-6 pb-4">
+          <div className="relative">
+            <Slider
+              defaultValue={[0, getDefaultMaxPrice()]}
+              max={getDefaultMaxPrice()}
+              step={100}
+              value={priceRange}
+              onValueChange={setPriceRange}
+              className="mt-6"
+              minStepsBetweenThumbs={5000}
+            />
+            <div className="absolute -top-6 left-0 right-0">
+              <div 
+                className="absolute text-sm font-medium text-primary w-20 text-center transform -translate-x-1/2"
+                style={{ 
+                  left: `${(priceRange[0] / getDefaultMaxPrice()) * 100}%`
+                }}
+              >
+                {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(priceRange[0])}
+              </div>
+              <div 
+                className="absolute text-sm font-medium text-primary w-20 text-center transform -translate-x-1/2"
+                style={{ 
+                  left: `${(priceRange[1] / getDefaultMaxPrice()) * 100}%`
+                }}
+              >
+                {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(priceRange[1])}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <Button 
+          type="submit" 
+          className="h-14 text-lg font-semibold" 
+          disabled={isSearching}
+        >
+          {isSearching ? (
+            <div className="flex items-center justify-center">
+              <span className="mr-2">Recherche en cours</span>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+            </div>
+          ) : (
+            "Rechercher"
+          )}
+        </Button>
+        <Button 
+          type="button"
+          variant="outline"
+          className="h-14 text-lg font-semibold"
+          onClick={() => {
+            setLocation("");
+            setPropertyType(undefined);
+            setRooms(undefined);
+            setPriceRange([0, getDefaultMaxPrice()]);
+            setSelectedTransactionType(transactionType);
+            
+            const resetParams: SearchParams = {};
+            if (transactionType) {
+              resetParams.transactionType = transactionType;
+            }
+            
+            if (onSearch) {
+              onSearch(resetParams);
+            }
+          }}
+        >
+          Réinitialiser
+        </Button>
+      </div>
+    </div>
   ), [
-    handleSearch,
-    isSearching,
     location,
-    setLocation,
-    priceRange,
-    setPriceRange,
     propertyType,
-    setPropertyType,
     rooms,
-    setRooms,
+    priceRange,
     selectedTransactionType,
+    isSearching,
+    transactionType,
+    getDefaultMaxPrice,
+    onSearch,
+    setLocation,
+    setPropertyType,
+    setRooms,
+    setPriceRange,
     setSelectedTransactionType,
     showTransactionTypeFilter,
   ]);
 
   return (
     <div className="w-full">
-      {/* Version Desktop */}
       <form onSubmit={handleSearch} className="hidden md:flex gap-2 items-center">
-
         <Popover>
           <PopoverTrigger asChild>
             <div>
@@ -392,45 +374,32 @@ export function SearchFilters({
             </div>
           </PopoverTrigger>
           <PopoverContent className="w-[300px] p-4">
-            <Label className="mb-4">Prix maximum</Label>
-            <div className="pt-6 pb-4">
-              <div className="relative pt-6 pb-4">
-                <div className="relative">
-                  <Slider
-                    defaultValue={[0, defaultMaxPrice]}
-                    max={defaultMaxPrice}
-                    step={100}
-                    value={priceRange}
-                    onValueChange={setPriceRange}
-                    className="mt-6 touch-none cursor-grab active:cursor-grabbing"
-                    aria-label="Prix"
-                    minStepsBetweenThumbs={5000}
-                  />
-                  <div className="absolute -top-6 left-0 right-0">
-                    <div 
-                      className="absolute text-sm font-medium text-primary w-20 text-center transform -translate-x-1/2"
-                      style={{ 
-                        left: `${(priceRange[0] / defaultMaxPrice) * 100}%`,
-                      }}
-                    >
-                      {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(priceRange[0])}
-                    </div>
-                    <div 
-                      className="absolute text-sm font-medium text-primary w-20 text-center transform -translate-x-1/2"
-                      style={{ 
-                        left: `${(priceRange[1] / defaultMaxPrice) * 100}%`,
-                      }}
-                    >
-                      {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(priceRange[1])}
-                    </div>
-                  </div>
-                  <div className="flex justify-between items-center mt-2 text-xs text-muted-foreground">
-                    <span>0 €</span>
-                    <span>250k €</span>
-                    <span>500k €</span>
-                    <span>750k €</span>
-                    <span>1M €</span>
-                  </div>
+            <div className="relative">
+              <Slider
+                defaultValue={[0, getDefaultMaxPrice()]}
+                max={getDefaultMaxPrice()}
+                step={100}
+                value={priceRange}
+                onValueChange={setPriceRange}
+                className="mt-6"
+                minStepsBetweenThumbs={5000}
+              />
+              <div className="absolute -top-6 left-0 right-0">
+                <div 
+                  className="absolute text-sm font-medium text-primary w-20 text-center transform -translate-x-1/2"
+                  style={{ 
+                    left: `${(priceRange[0] / getDefaultMaxPrice()) * 100}%`
+                  }}
+                >
+                  {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(priceRange[0])}
+                </div>
+                <div 
+                  className="absolute text-sm font-medium text-primary w-20 text-center transform -translate-x-1/2"
+                  style={{ 
+                    left: `${(priceRange[1] / getDefaultMaxPrice()) * 100}%`
+                  }}
+                >
+                  {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(priceRange[1])}
                 </div>
               </div>
             </div>
@@ -443,7 +412,7 @@ export function SearchFilters({
               <FilterButton
                 icon={Home}
                 label="Type de bien"
-                value={propertyType}
+                value={propertyType === 'apartment' ? 'Appartement' : propertyType === 'house' ? 'Maison' : propertyType === 'villa' ? 'Villa' : undefined}
               />
             </div>
           </PopoverTrigger>
@@ -502,6 +471,7 @@ export function SearchFilters({
                 <Label>Type de transaction</Label>
                 <div className="grid grid-cols-2 gap-2">
                   <Button
+                    type="button"
                     variant={selectedTransactionType === 'sale' ? "default" : "outline"}
                     className="w-full"
                     onClick={() => setSelectedTransactionType('sale')}
@@ -509,6 +479,7 @@ export function SearchFilters({
                     Vente
                   </Button>
                   <Button
+                    type="button"
                     variant={selectedTransactionType === 'rent' ? "default" : "outline"}
                     className="w-full"
                     onClick={() => setSelectedTransactionType('rent')}
@@ -519,7 +490,7 @@ export function SearchFilters({
               </div>
               <div className="space-y-2">
                 <Label>Surface minimum</Label>
-                <Select value={propertyType} onValueChange={setPropertyType}>
+                <Select>
                   <SelectTrigger>
                     <SelectValue placeholder="Surface minimum" />
                   </SelectTrigger>
@@ -540,16 +511,14 @@ export function SearchFilters({
           </PopoverContent>
         </Popover>
 
-        
-
-          <Button 
-            type="submit"
-            className="ml-2"
-            disabled={isSearching}
-          >
-            {isSearching ? "Recherche..." : "Rechercher"}
-          </Button>
-        </form>
+        <Button 
+          type="submit"
+          className="ml-2"
+          disabled={isSearching}
+        >
+          {isSearching ? "Recherche..." : "Rechercher"}
+        </Button>
+      </form>
 
       {/* Version Mobile */}
       <div className="md:hidden">
