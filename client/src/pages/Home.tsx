@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useMemo, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { PropertyCard } from "@/components/PropertyCard";
 import { PriceMap } from "@/components/PriceMap";
@@ -10,42 +10,47 @@ export function Home() {
   const queryClient = useQueryClient();
   const searchParams = queryClient.getQueryData<SearchParams>(['searchParams']) || {};
 
-  // Réinitialiser les paramètres de recherche lors du montage du composant
   useEffect(() => {
     queryClient.setQueryData(['searchParams'], {});
   }, []); // Se déclenche uniquement au montage
 
-  const { data: properties, isLoading } = useQuery<Property[]>({
-    queryKey: ["/api/properties", searchParams],
+  const queryKey = useMemo(() => ["/api/properties", searchParams], [searchParams]);
+
+  const { data: properties = [], isLoading } = useQuery<Property[]>({
+    queryKey,
     queryFn: async () => {
       const urlParams = new URLSearchParams();
-      const currentParams = queryClient.getQueryData<SearchParams>(['searchParams']) || {};
-      
-      if (currentParams.location) urlParams.append('location', currentParams.location);
-      if (currentParams.propertyType) urlParams.append('type', currentParams.propertyType);
-      if (currentParams.rooms) urlParams.append('rooms', currentParams.rooms);
-      if (currentParams.minPrice) urlParams.append('minPrice', currentParams.minPrice.toString());
-      if (currentParams.maxPrice) urlParams.append('maxPrice', currentParams.maxPrice.toString());
-      if (currentParams.transactionType) urlParams.append('transactionType', currentParams.transactionType);
+
+      if (searchParams.location) urlParams.append('location', searchParams.location);
+      if (searchParams.propertyType) urlParams.append('type', searchParams.propertyType);
+      if (searchParams.rooms) urlParams.append('rooms', searchParams.rooms);
+      if (searchParams.minPrice) urlParams.append('minPrice', searchParams.minPrice.toString());
+      if (searchParams.maxPrice) urlParams.append('maxPrice', searchParams.maxPrice.toString());
+      if (searchParams.transactionType) urlParams.append('transactionType', searchParams.transactionType);
+      if (searchParams.surface) urlParams.append('surface', searchParams.surface.toString());
 
       const queryString = urlParams.toString();
       const url = `/api/properties${queryString ? `?${queryString}` : ''}`;
-      
-      console.log('Fetching properties with URL:', url);
-      console.log('Search params:', currentParams);
-      
+
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error('Failed to fetch properties');
       }
-      
-      const data = await response.json();
-      console.log('Received properties:', data);
-      return data;
+
+      return response.json();
     },
-    enabled: true,
-    staleTime: 0, // Always refetch when params change
+    gcTime: 5 * 60 * 1000, // Keep unused data in cache for 5 minutes
+    staleTime: 30000, // Consider data fresh for 30 seconds
   });
+
+  const maxPropertyPrice = useMemo(() => {
+    if (!properties.length) return undefined;
+    return Math.max(...properties.map(p => p.price));
+  }, [properties]);
+
+  const handleSearch = useCallback((params: SearchParams) => {
+    queryClient.setQueryData(['searchParams'], params);
+  }, [queryClient]);
 
   return (
     <div>
@@ -63,19 +68,8 @@ export function Home() {
           <div className="mt-10">
             <SearchFilters 
               showTransactionTypeFilter={true}
-              maxPropertyPrice={properties ? Math.max(...properties.map(p => p.price)) : undefined}
-              onSearch={(params) => {
-                console.log('Search triggered in Home with params:', params);
-                // Force React Query to refetch with new parameters
-                queryClient.setQueryData(['searchParams'], params);
-                queryClient.invalidateQueries({ 
-                  queryKey: ['/api/properties', params]
-                });
-                // Forcer un rafraîchissement immédiat
-                queryClient.refetchQueries({
-                  queryKey: ['/api/properties', params]
-                });
-              }}
+              maxPropertyPrice={maxPropertyPrice}
+              onSearch={handleSearch}
             />
           </div>
         </div>
@@ -99,7 +93,7 @@ export function Home() {
           </h2>
           {isLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {[...Array(6)].map((_, i) => (
+              {Array.from({ length: 6 }).map((_, i) => (
                 <div key={i} className="animate-pulse">
                   <div className="bg-gray-200 h-48 rounded-lg mb-4"></div>
                   <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
@@ -109,7 +103,7 @@ export function Home() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {properties?.map((property) => (
+              {properties.map((property) => (
                 <PropertyCard key={property.id} property={property} />
               ))}
             </div>
