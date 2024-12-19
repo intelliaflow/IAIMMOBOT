@@ -470,7 +470,7 @@ export function SearchFilters({
               <FilterButton
                 icon={Square}
                 label="Surface"
-                value={surface ? `${surface} m²` : "Surface"}
+                value={surface || "Surface"}
               />
             </div>
           </PopoverTrigger>
@@ -480,15 +480,15 @@ export function SearchFilters({
                 <SelectValue placeholder="Surface" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={20}>20 m²</SelectItem>
-                <SelectItem value={30}>30 m²</SelectItem>
-                <SelectItem value={40}>40 m²</SelectItem>
-                <SelectItem value={50}>50 m²</SelectItem>
-                <SelectItem value={60}>60 m²</SelectItem>
-                <SelectItem value={70}>70 m²</SelectItem>
-                <SelectItem value={80}>80 m²</SelectItem>
-                <SelectItem value={90}>90 m²</SelectItem>
-                <SelectItem value={100}>100 m²</SelectItem>
+                <SelectItem value="20">20 m²</SelectItem>
+                <SelectItem value="30">30 m²</SelectItem>
+                <SelectItem value="40">40 m²</SelectItem>
+                <SelectItem value="50">50 m²</SelectItem>
+                <SelectItem value="60">60 m²</SelectItem>
+                <SelectItem value="70">70 m²</SelectItem>
+                <SelectItem value="80">80 m²</SelectItem>
+                <SelectItem value="90">90 m²</SelectItem>
+                <SelectItem value="100">100 m²</SelectItem>
               </SelectContent>
             </Select>
           </PopoverContent>
