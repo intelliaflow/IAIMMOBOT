@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Bed, Bath, Square, MapPin, Phone, Mail } from "lucide-react";
 import type { Property } from "@db/schema";
 import { formatAddress } from "@/lib/utils";
+import { ImageGallery } from "@/components/ImageGallery";
 
 // Using the formatAddress function from utils.ts
 
@@ -39,15 +40,11 @@ export function PropertyDetail() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         <div className="md:col-span-2">
-          <div className="aspect-[16/9] relative overflow-hidden rounded-lg mb-8">
-            {property.images && property.images[0] ? (
-              <img
-                src={property.images[0]}
-                alt={property.title}
-                className="object-cover w-full h-full"
-              />
+          <div className="mb-8">
+            {property.images && property.images.length > 0 ? (
+              <ImageGallery images={property.images} className="aspect-[16/9]" />
             ) : (
-              <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+              <div className="aspect-[16/9] w-full bg-gray-200 flex items-center justify-center rounded-lg">
                 <span className="text-gray-400">Aucune image disponible</span>
               </div>
             )}
