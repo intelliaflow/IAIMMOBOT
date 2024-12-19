@@ -188,19 +188,12 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
               <Slider
                 defaultValue={[0, 1000000]}
                 max={1000000}
-                step={100}
+                step={1}
                 value={priceRange}
-                onValueChange={(value) => {
-                  setPriceRange(value);
-                }}
+                onValueChange={setPriceRange}
                 className="mt-6 touch-none cursor-grab active:cursor-grabbing"
                 aria-label="Prix"
-                minStepsBetweenThumbs={1000}
-                orientation="horizontal"
-                inverted={false}
-                disabled={false}
-                draggable={true}
-                data-dragging="true"
+                minStepsBetweenThumbs={10000}
               />
               <div className="flex justify-between items-center mt-2 text-sm text-muted-foreground">
                 <span>0 €</span>
