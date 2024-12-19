@@ -88,7 +88,7 @@ export function SearchFilters({
   const [propertyType, setPropertyType] = useState<string>();
   const [rooms, setRooms] = useState<string>();
   const [selectedTransactionType, setSelectedTransactionType] = useState<'sale' | 'rent' | undefined>(transactionType);
-  const [surface, setSurface] = useState<number>();
+  const [surface, setSurface] = useState<string>();
   
   const getDefaultMaxPrice = useCallback(() => {
     if (maxPropertyPrice && maxPropertyPrice > 0) {
@@ -138,7 +138,7 @@ export function SearchFilters({
       searchParams.transactionType = selectedTransactionType || transactionType;
     }
     if (surface) {
-      searchParams.surface = surface;
+      searchParams.surface = parseInt(surface, 10);
     }
 
     if (onSearch) {
@@ -470,7 +470,7 @@ export function SearchFilters({
               <FilterButton
                 icon={Square}
                 label="Surface"
-                value={surface ? `${surface} m²` : undefined}
+                value={surface ? `${surface} m²` : "Surface"}
               />
             </div>
           </PopoverTrigger>
