@@ -33,7 +33,7 @@ export function ImageGallery({ images, className }: ImageGalleryProps) {
             key={image}
             className={cn(
               "relative aspect-[4/3] cursor-pointer overflow-hidden rounded-lg",
-              index >= 4 && "hidden"
+              index >= 2 && "hidden"
             )}
             onClick={() => {
               setCurrentImageIndex(index);
@@ -45,9 +45,9 @@ export function ImageGallery({ images, className }: ImageGalleryProps) {
               alt={`Image ${index + 1}`}
               className="h-full w-full object-cover transition-transform duration-300 hover:scale-110"
             />
-            {index === 3 && images.length > 4 && (
+            {index === 1 && images.length > 2 && (
               <div className="absolute inset-0 flex items-center justify-center bg-black/50 text-white">
-                <span className="text-lg font-medium">+{images.length - 4}</span>
+                <span className="text-lg font-medium">+{images.length - 2}</span>
               </div>
             )}
           </div>
