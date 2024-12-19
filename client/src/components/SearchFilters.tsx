@@ -190,13 +190,16 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
                 max={1000000}
                 step={100}
                 value={priceRange}
-                onValueChange={setPriceRange}
-                className="mt-6"
-                aria-label="Prix"
-                minStepsBetweenThumbs={1}
-                onValueCommit={(value) => {
+                onValueChange={(value) => {
                   setPriceRange(value);
+                  // Force immediate update for smooth interaction
+                  requestAnimationFrame(() => {
+                    setPriceRange(value);
+                  });
                 }}
+                className="mt-6 touch-none"
+                aria-label="Prix"
+                minStepsBetweenThumbs={1000}
                 orientation="horizontal"
                 inverted={false}
                 disabled={false}
