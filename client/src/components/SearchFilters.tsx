@@ -24,7 +24,8 @@ import {
   MapPin,
   Grid2X2,
   SlidersHorizontal,
-  ChevronDown
+  ChevronDown,
+  Square
 } from "lucide-react";
 
 export interface SearchParams {
@@ -34,6 +35,7 @@ export interface SearchParams {
   minPrice?: number;
   maxPrice?: number;
   transactionType?: 'sale' | 'rent';
+  surface?: number;
 }
 
 interface SearchFiltersProps {
@@ -86,6 +88,7 @@ export function SearchFilters({
   const [propertyType, setPropertyType] = useState<string>();
   const [rooms, setRooms] = useState<string>();
   const [selectedTransactionType, setSelectedTransactionType] = useState<'sale' | 'rent' | undefined>(transactionType);
+  const [surface, setSurface] = useState<number>();
   
   const getDefaultMaxPrice = useCallback(() => {
     if (maxPropertyPrice && maxPropertyPrice > 0) {
@@ -133,6 +136,9 @@ export function SearchFilters({
     
     if (selectedTransactionType || transactionType) {
       searchParams.transactionType = selectedTransactionType || transactionType;
+    }
+    if (surface) {
+      searchParams.surface = surface;
     }
 
     if (onSearch) {
@@ -300,7 +306,7 @@ export function SearchFilters({
             setRooms(undefined);
             setPriceRange([0, getDefaultMaxPrice()]);
             setSelectedTransactionType(transactionType);
-            
+            setSurface(undefined);
             const resetParams: SearchParams = {};
             if (transactionType) {
               resetParams.transactionType = transactionType;
@@ -331,6 +337,8 @@ export function SearchFilters({
     setPriceRange,
     setSelectedTransactionType,
     showTransactionTypeFilter,
+    surface,
+    setSurface
   ]);
 
   return (
@@ -460,56 +468,32 @@ export function SearchFilters({
           <PopoverTrigger asChild>
             <div>
               <FilterButton
-                icon={SlidersHorizontal}
-                label="+ de critères"
+                icon={Square}
+                label="Surface"
+                value={surface ? `${surface} m²` : undefined}
               />
             </div>
           </PopoverTrigger>
-          <PopoverContent className="w-[300px] p-4">
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>Type de transaction</Label>
-                <div className="grid grid-cols-2 gap-2">
-                  <Button
-                    type="button"
-                    variant={selectedTransactionType === 'sale' ? "default" : "outline"}
-                    className="w-full"
-                    onClick={() => setSelectedTransactionType('sale')}
-                  >
-                    Vente
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={selectedTransactionType === 'rent' ? "default" : "outline"}
-                    className="w-full"
-                    onClick={() => setSelectedTransactionType('rent')}
-                  >
-                    Location
-                  </Button>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label>Surface minimum</Label>
-                <Select>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Surface minimum" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="20">20 m²</SelectItem>
-                    <SelectItem value="30">30 m²</SelectItem>
-                    <SelectItem value="40">40 m²</SelectItem>
-                    <SelectItem value="50">50 m²</SelectItem>
-                    <SelectItem value="60">60 m²</SelectItem>
-                    <SelectItem value="70">70 m²</SelectItem>
-                    <SelectItem value="80">80 m²</SelectItem>
-                    <SelectItem value="90">90 m²</SelectItem>
-                    <SelectItem value="100">100 m²</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+          <PopoverContent className="w-[200px] p-2">
+            <Select value={surface} onValueChange={setSurface}>
+              <SelectTrigger>
+                <SelectValue placeholder="Surface" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={20}>20 m²</SelectItem>
+                <SelectItem value={30}>30 m²</SelectItem>
+                <SelectItem value={40}>40 m²</SelectItem>
+                <SelectItem value={50}>50 m²</SelectItem>
+                <SelectItem value={60}>60 m²</SelectItem>
+                <SelectItem value={70}>70 m²</SelectItem>
+                <SelectItem value={80}>80 m²</SelectItem>
+                <SelectItem value={90}>90 m²</SelectItem>
+                <SelectItem value={100}>100 m²</SelectItem>
+              </SelectContent>
+            </Select>
           </PopoverContent>
         </Popover>
+
 
         <Button 
           type="submit"
