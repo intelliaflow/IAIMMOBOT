@@ -3,30 +3,22 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
-import { useQueryClient } from "@tanstack/react-query";
-import { useToast } from "@/hooks/use-toast";
-import { LocationSearch } from "./LocationSearch";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
-  SheetTrigger
+  SheetTrigger,
 } from "@/components/ui/sheet";
-import { 
-  Home,
-  Euro,
-  MapPin,
-  Grid2X2,
-  SlidersHorizontal,
-  ChevronDown,
-  Square
-} from "lucide-react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
+import { LocationSearch } from "./LocationSearch";
+import { SlidersHorizontal, MapPin, Euro, Home, Grid2X2, Square, ChevronDown } from "lucide-react";
 
 export interface SearchParams {
   location?: string;
@@ -69,18 +61,13 @@ const FilterButton = memo<FilterButtonProps>(({ icon: Icon, label, value, onClic
 
 FilterButton.displayName = 'FilterButton';
 
-export function SearchFilters({ 
-  transactionType, 
-  showTransactionTypeFilter = false, 
-  maxPropertyPrice = 1000000,
-  onSearch 
-}: SearchFiltersProps) {
+export function SearchFilters({ transactionType, showTransactionTypeFilter = false, maxPropertyPrice = 1000000, onSearch }: SearchFiltersProps) {
   const queryClient = useQueryClient();
   const [location, setLocation] = useState("");
   const [propertyType, setPropertyType] = useState<string>();
   const [rooms, setRooms] = useState<string>();
   const [selectedTransactionType, setSelectedTransactionType] = useState<'sale' | 'rent' | undefined>(transactionType);
-  const [surface, setSurface] = useState<number>(); // Corrected type
+  const [surface, setSurface] = useState<string>();
 
   const getDefaultMaxPrice = useCallback(() => {
     if (maxPropertyPrice && maxPropertyPrice > 0) {
@@ -129,8 +116,11 @@ export function SearchFilters({
       searchParams.transactionType = selectedTransactionType || transactionType;
     }
 
-    if (surface !== undefined) { // Check if surface is defined
-      searchParams.surface = surface;
+    if (surface) {
+      const surfaceNumber = parseInt(surface, 10);
+      if (!isNaN(surfaceNumber)) {
+        searchParams.surface = surfaceNumber;
+      }
     }
 
     if (onSearch) {
@@ -176,7 +166,8 @@ export function SearchFilters({
   }, [getDefaultMaxPrice, onSearch, transactionType]);
 
   return (
-    <div className="w-full">
+    <div className="w-full space-y-4">
+      {/* First row - Main filters */}
       <form onSubmit={handleSearch} className="hidden md:flex gap-2 items-center">
         <Popover>
           <PopoverTrigger asChild>
@@ -243,18 +234,18 @@ export function SearchFilters({
           <PopoverContent className="w-[200px] p-2">
             <Select value={surface} onValueChange={setSurface}>
               <SelectTrigger>
-                <SelectValue placeholder="Surface" />
+                <SelectValue placeholder="Surface minimum" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={20}>20 m²</SelectItem>
-                <SelectItem value={30}>30 m²</SelectItem>
-                <SelectItem value={40}>40 m²</SelectItem>
-                <SelectItem value={50}>50 m²</SelectItem>
-                <SelectItem value={60}>60 m²</SelectItem>
-                <SelectItem value={70}>70 m²</SelectItem>
-                <SelectItem value={80}>80 m²</SelectItem>
-                <SelectItem value={90}>90 m²</SelectItem>
-                <SelectItem value={100}>100 m²</SelectItem>
+                <SelectItem value="20">20 m²</SelectItem>
+                <SelectItem value="30">30 m²</SelectItem>
+                <SelectItem value="40">40 m²</SelectItem>
+                <SelectItem value="50">50 m²</SelectItem>
+                <SelectItem value="60">60 m²</SelectItem>
+                <SelectItem value="70">70 m²</SelectItem>
+                <SelectItem value="80">80 m²</SelectItem>
+                <SelectItem value="90">90 m²</SelectItem>
+                <SelectItem value="100">100 m²</SelectItem>
               </SelectContent>
             </Select>
           </PopoverContent>
@@ -309,7 +300,10 @@ export function SearchFilters({
             </Select>
           </PopoverContent>
         </Popover>
+      </form>
 
+      {/* Second row - Action buttons and more criteria */}
+      <div className="hidden md:flex justify-center gap-4 items-center">
         <Popover>
           <PopoverTrigger asChild>
             <div>
@@ -347,13 +341,22 @@ export function SearchFilters({
         </Popover>
 
         <Button 
-          type="submit"
-          className="ml-2"
+          onClick={handleSearch}
+          className="px-8"
           disabled={isSearching}
         >
           {isSearching ? "Recherche..." : "Rechercher"}
         </Button>
-      </form>
+
+        <Button
+          variant="outline"
+          onClick={handleReset}
+          className="px-8"
+        >
+          Réinitialiser
+        </Button>
+      </div>
+
 
       {/* Version Mobile */}
       <div className="md:hidden">
@@ -404,15 +407,15 @@ export function SearchFilters({
                     <SelectValue placeholder="Surface" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={20}>20 m²</SelectItem>
-                    <SelectItem value={30}>30 m²</SelectItem>
-                    <SelectItem value={40}>40 m²</SelectItem>
-                    <SelectItem value={50}>50 m²</SelectItem>
-                    <SelectItem value={60}>60 m²</SelectItem>
-                    <SelectItem value={70}>70 m²</SelectItem>
-                    <SelectItem value={80}>80 m²</SelectItem>
-                    <SelectItem value={90}>90 m²</SelectItem>
-                    <SelectItem value={100}>100 m²</SelectItem>
+                    <SelectItem value="20">20 m²</SelectItem>
+                    <SelectItem value="30">30 m²</SelectItem>
+                    <SelectItem value="40">40 m²</SelectItem>
+                    <SelectItem value="50">50 m²</SelectItem>
+                    <SelectItem value="60">60 m²</SelectItem>
+                    <SelectItem value="70">70 m²</SelectItem>
+                    <SelectItem value="80">80 m²</SelectItem>
+                    <SelectItem value="90">90 m²</SelectItem>
+                    <SelectItem value="100">100 m²</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
