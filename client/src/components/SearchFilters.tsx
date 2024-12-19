@@ -204,6 +204,11 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
                 inverted={false}
                 disabled={false}
                 draggable={true}
+                data-dragging="true"
+                onMouseDown={(e) => e.currentTarget.style.cursor = 'grabbing'}
+                onMouseUp={(e) => e.currentTarget.style.cursor = 'grab'}
+                onTouchStart={(e) => e.currentTarget.style.cursor = 'grabbing'}
+                onTouchEnd={(e) => e.currentTarget.style.cursor = 'grab'}
               />
               <div className="flex justify-between items-center mt-2 text-sm text-muted-foreground">
                 <span>0 €</span>
