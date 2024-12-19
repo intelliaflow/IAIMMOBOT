@@ -393,22 +393,45 @@ export function SearchFilters({
           </PopoverTrigger>
           <PopoverContent className="w-[300px] p-4">
             <Label className="mb-4">Prix maximum</Label>
-            <div className="pt-4">
-              <Slider
-                defaultValue={[0, defaultMaxPrice]}
-                max={defaultMaxPrice}
-                step={1000}
-                value={priceRange}
-                onValueChange={setPriceRange}
-                className="mt-6"
-              />
-              <div className="flex justify-between mt-2">
-                <span className="text-sm">0 €</span>
-                <span className="text-sm">{new Intl.NumberFormat('fr-FR', { 
-                  style: 'currency', 
-                  currency: 'EUR',
-                  maximumFractionDigits: 0 
-                }).format(priceRange[1])}</span>
+            <div className="pt-6 pb-4">
+              <div className="relative pt-6 pb-4">
+                <div className="relative">
+                  <Slider
+                    defaultValue={[0, defaultMaxPrice]}
+                    max={defaultMaxPrice}
+                    step={100}
+                    value={priceRange}
+                    onValueChange={setPriceRange}
+                    className="mt-6 touch-none cursor-grab active:cursor-grabbing"
+                    aria-label="Prix"
+                    minStepsBetweenThumbs={5000}
+                  />
+                  <div className="absolute -top-6 left-0 right-0">
+                    <div 
+                      className="absolute text-sm font-medium text-primary w-20 text-center transform -translate-x-1/2"
+                      style={{ 
+                        left: `${(priceRange[0] / defaultMaxPrice) * 100}%`,
+                      }}
+                    >
+                      {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(priceRange[0])}
+                    </div>
+                    <div 
+                      className="absolute text-sm font-medium text-primary w-20 text-center transform -translate-x-1/2"
+                      style={{ 
+                        left: `${(priceRange[1] / defaultMaxPrice) * 100}%`,
+                      }}
+                    >
+                      {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(priceRange[1])}
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center mt-2 text-xs text-muted-foreground">
+                    <span>0 €</span>
+                    <span>250k €</span>
+                    <span>500k €</span>
+                    <span>750k €</span>
+                    <span>1M €</span>
+                  </div>
+                </div>
               </div>
             </div>
           </PopoverContent>
