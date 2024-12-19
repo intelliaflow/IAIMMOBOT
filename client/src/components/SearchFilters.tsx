@@ -6,8 +6,27 @@ import { Slider } from "@/components/ui/slider";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { LocationSearch } from "./LocationSearch";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Filter } from "lucide-react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger
+} from "@/components/ui/sheet";
+import { 
+  Home,
+  Euro,
+  MapPin,
+  Square,
+  Grid2X2,
+  SlidersHorizontal,
+  ChevronDown
+} from "lucide-react";
 
 interface SearchFiltersProps {
   transactionType?: 'sale' | 'rent';
@@ -29,6 +48,31 @@ interface SearchFiltersProps {
   showTransactionTypeFilter?: boolean;
   maxPropertyPrice?: number;
   onSearch?: (params: SearchParams) => void;
+}
+
+function FilterButton({ 
+  icon: Icon, 
+  label, 
+  value, 
+  onClick 
+}: { 
+  icon: any, 
+  label: string, 
+  value?: string, 
+  onClick?: () => void 
+}) {
+  return (
+    <Button
+      variant="outline"
+      className="h-10 px-4 py-2 flex items-center gap-2 bg-white"
+      onClick={onClick}
+    >
+      <Icon className="h-4 w-4" />
+      <span className="font-medium">{label}</span>
+      {value && <span className="text-muted-foreground">: {value}</span>}
+      <ChevronDown className="h-4 w-4 ml-1" />
+    </Button>
+  );
 }
 
 export function SearchFilters({ 
@@ -306,10 +350,185 @@ export function SearchFilters({
   ]);
 
   return (
-    <>
+    <div className="w-full">
       {/* Version Desktop */}
-      <form onSubmit={handleSearch} className="hidden md:block bg-white p-6 rounded-lg shadow-md">
-        <FilterForm />
+      <form onSubmit={handleSearch} className="hidden md:flex gap-2 items-center">
+        <Popover>
+          <PopoverTrigger asChild>
+            <div>
+              <FilterButton
+                icon={Home}
+                label={selectedTransactionType === 'rent' ? "Louer" : "Acheter"}
+              />
+            </div>
+          </PopoverTrigger>
+          <PopoverContent className="w-[200px] p-2">
+            <div className="grid grid-cols-1 gap-2">
+              <Button
+                variant={selectedTransactionType === 'sale' ? "default" : "ghost"}
+                className="w-full justify-start"
+                onClick={() => setSelectedTransactionType('sale')}
+              >
+                Acheter
+              </Button>
+              <Button
+                variant={selectedTransactionType === 'rent' ? "default" : "ghost"}
+                className="w-full justify-start"
+                onClick={() => setSelectedTransactionType('rent')}
+              >
+                Louer
+              </Button>
+            </div>
+          </PopoverContent>
+        </Popover>
+
+        <Popover>
+          <PopoverTrigger asChild>
+            <div>
+              <FilterButton
+                icon={MapPin}
+                label="Localisation"
+                value={location || "Toutes"}
+              />
+            </div>
+          </PopoverTrigger>
+          <PopoverContent className="w-[300px] p-4">
+            <LocationSearch
+              value={location}
+              onChange={setLocation}
+              className="w-full"
+            />
+          </PopoverContent>
+        </Popover>
+
+        <Popover>
+          <PopoverTrigger asChild>
+            <div>
+              <FilterButton
+                icon={Euro}
+                label="Budget"
+                value={priceRange[1] === defaultMaxPrice ? "Max" : `${new Intl.NumberFormat('fr-FR', { 
+                  style: 'currency', 
+                  currency: 'EUR',
+                  maximumFractionDigits: 0
+                }).format(priceRange[1])}`}
+              />
+            </div>
+          </PopoverTrigger>
+          <PopoverContent className="w-[300px] p-4">
+            <Label className="mb-4">Prix maximum</Label>
+            <div className="pt-4">
+              <Slider
+                defaultValue={[0, defaultMaxPrice]}
+                max={defaultMaxPrice}
+                step={1000}
+                value={priceRange}
+                onValueChange={setPriceRange}
+                className="mt-6"
+              />
+              <div className="flex justify-between mt-2">
+                <span className="text-sm">0 €</span>
+                <span className="text-sm">{new Intl.NumberFormat('fr-FR', { 
+                  style: 'currency', 
+                  currency: 'EUR',
+                  maximumFractionDigits: 0 
+                }).format(priceRange[1])}</span>
+              </div>
+            </div>
+          </PopoverContent>
+        </Popover>
+
+        <Popover>
+          <PopoverTrigger asChild>
+            <div>
+              <FilterButton
+                icon={Square}
+                label="Surface"
+                value={propertyType}
+              />
+            </div>
+          </PopoverTrigger>
+          <PopoverContent className="w-[200px] p-2">
+            <Select value={propertyType} onValueChange={setPropertyType}>
+              <SelectTrigger>
+                <SelectValue placeholder="Surface minimum" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="20">20 m²</SelectItem>
+                <SelectItem value="30">30 m²</SelectItem>
+                <SelectItem value="40">40 m²</SelectItem>
+                <SelectItem value="50">50 m²</SelectItem>
+                <SelectItem value="60">60 m²</SelectItem>
+                <SelectItem value="70">70 m²</SelectItem>
+                <SelectItem value="80">80 m²</SelectItem>
+                <SelectItem value="90">90 m²</SelectItem>
+                <SelectItem value="100">100 m²</SelectItem>
+              </SelectContent>
+            </Select>
+          </PopoverContent>
+        </Popover>
+
+        <Popover>
+          <PopoverTrigger asChild>
+            <div>
+              <FilterButton
+                icon={Grid2X2}
+                label="Pièces"
+                value={rooms}
+              />
+            </div>
+          </PopoverTrigger>
+          <PopoverContent className="w-[200px] p-2">
+            <Select value={rooms} onValueChange={setRooms}>
+              <SelectTrigger>
+                <SelectValue placeholder="Nombre de pièces" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1">Studio/T1</SelectItem>
+                <SelectItem value="2">2 pièces</SelectItem>
+                <SelectItem value="3">3 pièces</SelectItem>
+                <SelectItem value="4">4 pièces</SelectItem>
+                <SelectItem value="5">5 pièces et +</SelectItem>
+              </SelectContent>
+            </Select>
+          </PopoverContent>
+        </Popover>
+
+        <Popover>
+          <PopoverTrigger asChild>
+            <div>
+              <FilterButton
+                icon={SlidersHorizontal}
+                label="+ de critères"
+              />
+            </div>
+          </PopoverTrigger>
+          <PopoverContent className="w-[300px] p-4">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Type de bien</Label>
+                <Select value={propertyType} onValueChange={setPropertyType}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Tous types de biens" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="apartment">Appartement</SelectItem>
+                    <SelectItem value="house">Maison</SelectItem>
+                    <SelectItem value="villa">Villa</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </PopoverContent>
+        </Popover>
+
+        <Button 
+          type="submit"
+          className="ml-2"
+          disabled={isSearching}
+        >
+          {isSearching ? "Recherche..." : "Rechercher"}
+        </Button>
       </form>
 
       {/* Version Mobile */}
@@ -317,7 +536,7 @@ export function SearchFilters({
         <Sheet>
           <SheetTrigger asChild>
             <Button variant="outline" className="w-full">
-              <Filter className="h-4 w-4 mr-2" />
+              <SlidersHorizontal className="h-4 w-4 mr-2" />
               Filtrer
             </Button>
           </SheetTrigger>
@@ -331,6 +550,6 @@ export function SearchFilters({
           </SheetContent>
         </Sheet>
       </div>
-    </>
+    </div>
   );
 }
