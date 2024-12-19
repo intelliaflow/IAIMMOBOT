@@ -180,17 +180,27 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
             <div className="flex justify-between items-center">
               <Label className="text-lg font-semibold">Budget</Label>
               <span className="text-base font-medium text-primary">
-                {priceRange[0].toLocaleString()}€ - {priceRange[1].toLocaleString()}€
+                {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(priceRange[0])} - 
+                {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(priceRange[1])}
               </span>
             </div>
-            <Slider
-              defaultValue={[0, 1000000]}
-              max={1000000}
-              step={10000}
-              value={priceRange}
-              onValueChange={setPriceRange}
-              className="mt-6"
-            />
+            <div className="pt-6 pb-4">
+              <Slider
+                defaultValue={[0, 1000000]}
+                max={1000000}
+                step={50000}
+                value={priceRange}
+                onValueChange={setPriceRange}
+                className="mt-6"
+              />
+              <div className="flex justify-between items-center mt-2 text-sm text-muted-foreground">
+                <span>0 €</span>
+                <span>250k €</span>
+                <span>500k €</span>
+                <span>750k €</span>
+                <span>1M €</span>
+              </div>
+            </div>
           </div>
 
           {/* Boutons de recherche et réinitialisation */}
