@@ -197,12 +197,13 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
                     setPriceRange(value);
                   });
                 }}
-                className="mt-6 touch-none"
+                className="mt-6 touch-none cursor-grab active:cursor-grabbing"
                 aria-label="Prix"
                 minStepsBetweenThumbs={1000}
                 orientation="horizontal"
                 inverted={false}
                 disabled={false}
+                draggable={true}
               />
               <div className="flex justify-between items-center mt-2 text-sm text-muted-foreground">
                 <span>0 €</span>
