@@ -353,34 +353,6 @@ export function SearchFilters({
     <div className="w-full">
       {/* Version Desktop */}
       <form onSubmit={handleSearch} className="hidden md:flex gap-2 items-center">
-        <Popover>
-          <PopoverTrigger asChild>
-            <div>
-              <FilterButton
-                icon={Home}
-                label={selectedTransactionType === 'rent' ? "Louer" : "Acheter"}
-              />
-            </div>
-          </PopoverTrigger>
-          <PopoverContent className="w-[200px] p-2">
-            <div className="grid grid-cols-1 gap-2">
-              <Button
-                variant={selectedTransactionType === 'sale' ? "default" : "ghost"}
-                className="w-full justify-start"
-                onClick={() => setSelectedTransactionType('sale')}
-              >
-                Acheter
-              </Button>
-              <Button
-                variant={selectedTransactionType === 'rent' ? "default" : "ghost"}
-                className="w-full justify-start"
-                onClick={() => setSelectedTransactionType('rent')}
-              >
-                Louer
-              </Button>
-            </div>
-          </PopoverContent>
-        </Popover>
 
         <Popover>
           <PopoverTrigger asChild>
@@ -407,7 +379,11 @@ export function SearchFilters({
               <FilterButton
                 icon={Euro}
                 label="Budget"
-                value={priceRange[1] === defaultMaxPrice ? "Max" : `${new Intl.NumberFormat('fr-FR', { 
+                value={`${new Intl.NumberFormat('fr-FR', { 
+                  style: 'currency', 
+                  currency: 'EUR',
+                  maximumFractionDigits: 0
+                }).format(priceRange[0])} - ${new Intl.NumberFormat('fr-FR', { 
                   style: 'currency', 
                   currency: 'EUR',
                   maximumFractionDigits: 0
@@ -522,14 +498,44 @@ export function SearchFilters({
           </PopoverContent>
         </Popover>
 
-        <Button 
-          type="submit"
-          className="ml-2"
-          disabled={isSearching}
-        >
-          {isSearching ? "Recherche..." : "Rechercher"}
-        </Button>
-      </form>
+        <Popover>
+            <PopoverTrigger asChild>
+              <div>
+                <FilterButton
+                  icon={Home}
+                  label="Type de transaction"
+                  value={selectedTransactionType === 'rent' ? "Location" : "Vente"}
+                />
+              </div>
+            </PopoverTrigger>
+            <PopoverContent className="w-[200px] p-2">
+              <div className="grid grid-cols-1 gap-2">
+                <Button
+                  variant={selectedTransactionType === 'sale' ? "default" : "ghost"}
+                  className="w-full justify-start"
+                  onClick={() => setSelectedTransactionType('sale')}
+                >
+                  Vente
+                </Button>
+                <Button
+                  variant={selectedTransactionType === 'rent' ? "default" : "ghost"}
+                  className="w-full justify-start"
+                  onClick={() => setSelectedTransactionType('rent')}
+                >
+                  Location
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          <Button 
+            type="submit"
+            className="ml-2"
+            disabled={isSearching}
+          >
+            {isSearching ? "Recherche..." : "Rechercher"}
+          </Button>
+        </form>
 
       {/* Version Mobile */}
       <div className="md:hidden">
