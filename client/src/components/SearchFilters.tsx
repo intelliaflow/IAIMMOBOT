@@ -192,10 +192,6 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
                 value={priceRange}
                 onValueChange={(value) => {
                   setPriceRange(value);
-                  // Force immediate update for smooth interaction
-                  requestAnimationFrame(() => {
-                    setPriceRange(value);
-                  });
                 }}
                 className="mt-6 touch-none cursor-grab active:cursor-grabbing"
                 aria-label="Prix"
@@ -205,10 +201,6 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
                 disabled={false}
                 draggable={true}
                 data-dragging="true"
-                onMouseDown={(e) => e.currentTarget.style.cursor = 'grabbing'}
-                onMouseUp={(e) => e.currentTarget.style.cursor = 'grab'}
-                onTouchStart={(e) => e.currentTarget.style.cursor = 'grabbing'}
-                onTouchEnd={(e) => e.currentTarget.style.cursor = 'grab'}
               />
               <div className="flex justify-between items-center mt-2 text-sm text-muted-foreground">
                 <span>0 €</span>
