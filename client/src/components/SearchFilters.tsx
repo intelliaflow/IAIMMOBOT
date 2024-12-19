@@ -441,8 +441,8 @@ export function SearchFilters({
           <PopoverTrigger asChild>
             <div>
               <FilterButton
-                icon={Square}
-                label="Surface"
+                icon={Home}
+                label="Type de bien"
                 value={propertyType}
               />
             </div>
@@ -450,18 +450,12 @@ export function SearchFilters({
           <PopoverContent className="w-[200px] p-2">
             <Select value={propertyType} onValueChange={setPropertyType}>
               <SelectTrigger>
-                <SelectValue placeholder="Surface minimum" />
+                <SelectValue placeholder="Tous types de biens" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="20">20 m²</SelectItem>
-                <SelectItem value="30">30 m²</SelectItem>
-                <SelectItem value="40">40 m²</SelectItem>
-                <SelectItem value="50">50 m²</SelectItem>
-                <SelectItem value="60">60 m²</SelectItem>
-                <SelectItem value="70">70 m²</SelectItem>
-                <SelectItem value="80">80 m²</SelectItem>
-                <SelectItem value="90">90 m²</SelectItem>
-                <SelectItem value="100">100 m²</SelectItem>
+                <SelectItem value="apartment">Appartement</SelectItem>
+                <SelectItem value="house">Maison</SelectItem>
+                <SelectItem value="villa">Villa</SelectItem>
               </SelectContent>
             </Select>
           </PopoverContent>
@@ -505,15 +499,40 @@ export function SearchFilters({
           <PopoverContent className="w-[300px] p-4">
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label>Type de bien</Label>
+                <Label>Type de transaction</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    variant={selectedTransactionType === 'sale' ? "default" : "outline"}
+                    className="w-full"
+                    onClick={() => setSelectedTransactionType('sale')}
+                  >
+                    Vente
+                  </Button>
+                  <Button
+                    variant={selectedTransactionType === 'rent' ? "default" : "outline"}
+                    className="w-full"
+                    onClick={() => setSelectedTransactionType('rent')}
+                  >
+                    Location
+                  </Button>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Surface minimum</Label>
                 <Select value={propertyType} onValueChange={setPropertyType}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Tous types de biens" />
+                    <SelectValue placeholder="Surface minimum" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="apartment">Appartement</SelectItem>
-                    <SelectItem value="house">Maison</SelectItem>
-                    <SelectItem value="villa">Villa</SelectItem>
+                    <SelectItem value="20">20 m²</SelectItem>
+                    <SelectItem value="30">30 m²</SelectItem>
+                    <SelectItem value="40">40 m²</SelectItem>
+                    <SelectItem value="50">50 m²</SelectItem>
+                    <SelectItem value="60">60 m²</SelectItem>
+                    <SelectItem value="70">70 m²</SelectItem>
+                    <SelectItem value="80">80 m²</SelectItem>
+                    <SelectItem value="90">90 m²</SelectItem>
+                    <SelectItem value="100">100 m²</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -521,35 +540,7 @@ export function SearchFilters({
           </PopoverContent>
         </Popover>
 
-        <Popover>
-            <PopoverTrigger asChild>
-              <div>
-                <FilterButton
-                  icon={Home}
-                  label="Type de transaction"
-                  value={selectedTransactionType === 'rent' ? "Location" : "Vente"}
-                />
-              </div>
-            </PopoverTrigger>
-            <PopoverContent className="w-[200px] p-2">
-              <div className="grid grid-cols-1 gap-2">
-                <Button
-                  variant={selectedTransactionType === 'sale' ? "default" : "ghost"}
-                  className="w-full justify-start"
-                  onClick={() => setSelectedTransactionType('sale')}
-                >
-                  Vente
-                </Button>
-                <Button
-                  variant={selectedTransactionType === 'rent' ? "default" : "ghost"}
-                  className="w-full justify-start"
-                  onClick={() => setSelectedTransactionType('rent')}
-                >
-                  Location
-                </Button>
-              </div>
-            </PopoverContent>
-          </Popover>
+        
 
           <Button 
             type="submit"
