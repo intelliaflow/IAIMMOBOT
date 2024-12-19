@@ -494,6 +494,41 @@ export function SearchFilters({
           </PopoverContent>
         </Popover>
 
+        <Popover>
+          <PopoverTrigger asChild>
+            <div>
+              <FilterButton
+                icon={SlidersHorizontal}
+                label="+ de critères"
+              />
+            </div>
+          </PopoverTrigger>
+          <PopoverContent className="w-[300px] p-4">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Type de transaction</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    type="button"
+                    variant={selectedTransactionType === 'sale' ? "default" : "outline"}
+                    className="w-full"
+                    onClick={() => setSelectedTransactionType('sale')}
+                  >
+                    Vente
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={selectedTransactionType === 'rent' ? "default" : "outline"}
+                    className="w-full"
+                    onClick={() => setSelectedTransactionType('rent')}
+                  >
+                    Location
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </PopoverContent>
+        </Popover>
 
         <Button 
           type="submit"
