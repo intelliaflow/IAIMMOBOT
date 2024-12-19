@@ -185,22 +185,32 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
               </span>
             </div>
             <div className="pt-6 pb-4">
-              <Slider
-                defaultValue={[0, 1000000]}
-                max={1000000}
-                step={1}
-                value={priceRange}
-                onValueChange={setPriceRange}
-                className="mt-6 touch-none cursor-grab active:cursor-grabbing"
-                aria-label="Prix"
-                minStepsBetweenThumbs={10000}
-              />
-              <div className="flex justify-between items-center mt-2 text-sm text-muted-foreground">
-                <span>0 €</span>
-                <span>250k €</span>
-                <span>500k €</span>
-                <span>750k €</span>
-                <span>1M €</span>
+              <div className="relative pt-6 pb-4">
+                <Slider
+                  defaultValue={[0, 1000000]}
+                  max={1000000}
+                  step={100}
+                  value={priceRange}
+                  onValueChange={setPriceRange}
+                  className="mt-6 touch-none cursor-grab active:cursor-grabbing"
+                  aria-label="Prix"
+                  minStepsBetweenThumbs={5000}
+                />
+                <div className="absolute -top-6 left-0 right-0 flex justify-between text-sm font-medium">
+                  <span className="text-primary w-20 text-left">
+                    {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(priceRange[0])}
+                  </span>
+                  <span className="text-primary w-20 text-right">
+                    {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(priceRange[1])}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center mt-2 text-xs text-muted-foreground">
+                  <span>0 €</span>
+                  <span>250k €</span>
+                  <span>500k €</span>
+                  <span>750k €</span>
+                  <span>1M €</span>
+                </div>
               </div>
             </div>
           </div>
