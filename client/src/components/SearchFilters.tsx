@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -24,13 +24,32 @@ export interface SearchParams {
   transactionType?: 'sale' | 'rent';
 }
 
-export function SearchFilters({ transactionType, showTransactionTypeFilter = false, onSearch }: SearchFiltersProps) {
+interface SearchFiltersProps {
+  transactionType?: 'sale' | 'rent';
+  showTransactionTypeFilter?: boolean;
+  maxPropertyPrice?: number;
+  onSearch?: (params: SearchParams) => void;
+}
+
+export function SearchFilters({ 
+  transactionType, 
+  showTransactionTypeFilter = false, 
+  maxPropertyPrice = 1000000,
+  onSearch 
+}: SearchFiltersProps) {
   const queryClient = useQueryClient();
   const [location, setLocation] = useState("");
   const [propertyType, setPropertyType] = useState<string>();
   const [rooms, setRooms] = useState<string>();
   const [selectedTransactionType, setSelectedTransactionType] = useState<'sale' | 'rent' | undefined>(transactionType);
-  const [priceRange, setPriceRange] = useState([0, 1000000]);
+  const defaultMaxPrice = maxPropertyPrice > 0 ? maxPropertyPrice : (transactionType === 'rent' ? 5000 : 1000000);
+  const [priceRange, setPriceRange] = useState([0, defaultMaxPrice]);
+
+  // Reset price range when transaction type changes
+  useEffect(() => {
+    const newMaxPrice = selectedTransactionType === 'rent' ? 5000 : maxPropertyPrice;
+    setPriceRange([0, newMaxPrice]);
+  }, [selectedTransactionType, maxPropertyPrice]);
   const [isSearching, setIsSearching] = useState(false);
   const { toast } = useToast();
 

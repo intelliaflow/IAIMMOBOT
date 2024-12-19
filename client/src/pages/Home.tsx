@@ -63,6 +63,7 @@ export function Home() {
           <div className="mt-10">
             <SearchFilters 
               showTransactionTypeFilter={true}
+              maxPropertyPrice={properties ? Math.max(...properties.map(p => p.price)) : undefined}
               onSearch={(params) => {
                 console.log('Search triggered in Home with params:', params);
                 // Force React Query to refetch with new parameters
