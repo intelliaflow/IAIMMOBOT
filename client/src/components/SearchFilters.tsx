@@ -183,6 +183,7 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
     } else {
       setMaxSurface(numericValue);
     }
+    handleSearch();
   };
 
   return (
