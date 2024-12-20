@@ -8,10 +8,10 @@ import { geocodeAddress, batchGeocodeAddresses } from "../client/src/lib/geocodi
 // Helper function to handle rooms filter
 function handleRoomsFilter(rooms: string | undefined) {
   if (!rooms) return null;
-  
+
   const roomNumber = parseInt(rooms);
   if (isNaN(roomNumber)) return null;
-  
+
   if (roomNumber >= 5) {
     return sql`${properties.bedrooms} >= 5`;
   } else {
@@ -23,44 +23,69 @@ export function registerRoutes(app: Express): Server {
   // Get all properties with filters
   app.get("/api/properties", async (req, res) => {
     try {
-      const { location, type: propertyType, rooms, minPrice, maxPrice, transactionType } = req.query;
+      const { 
+        location, 
+        type: propertyType, 
+        rooms, 
+        minPrice, 
+        maxPrice, 
+        transactionType,
+        minSurface,
+        maxSurface
+      } = req.query;
+
+      console.log('Received query params:', req.query); // Debug log
 
       // Build conditions array
       let conditions: any[] = [];
-      
+
       if (transactionType && (transactionType === 'sale' || transactionType === 'rent')) {
         conditions.push(eq(properties.transactionType, transactionType));
       }
-      
+
       if (location && typeof location === 'string') {
         conditions.push(sql`LOWER(${properties.location}) LIKE LOWER(${'%' + location + '%'})`);
       }
-      
+
       if (propertyType && typeof propertyType === 'string') {
         conditions.push(eq(properties.type, propertyType));
       }
-      
+
       const roomsCondition = handleRoomsFilter(rooms as string);
       if (roomsCondition) {
         conditions.push(roomsCondition);
       }
-      
+
       if (minPrice && !isNaN(parseInt(minPrice as string))) {
         const minPriceValue = parseInt(minPrice as string);
         conditions.push(sql`${properties.price} >= ${minPriceValue}`);
       }
-      
+
       if (maxPrice && !isNaN(parseInt(maxPrice as string))) {
         const maxPriceValue = parseInt(maxPrice as string);
         conditions.push(sql`${properties.price} <= ${maxPriceValue}`);
       }
+
+      // Add surface filters
+      if (minSurface && !isNaN(parseInt(minSurface as string))) {
+        const minSurfaceValue = parseInt(minSurface as string);
+        conditions.push(sql`${properties.area} >= ${minSurfaceValue}`);
+      }
+
+      if (maxSurface && !isNaN(parseInt(maxSurface as string))) {
+        const maxSurfaceValue = parseInt(maxSurface as string);
+        conditions.push(sql`${properties.area} <= ${maxSurfaceValue}`);
+      }
+
+      console.log('SQL conditions:', conditions); // Debug log
 
       const filteredProperties = await db
         .select()
         .from(properties)
         .where(conditions.length > 0 ? and(...conditions) : undefined)
         .orderBy(desc(properties.createdAt));
-      
+
+      console.log(`Found ${filteredProperties.length} properties`); // Debug log
       return res.json(filteredProperties);
     } catch (error) {
       console.error("Error fetching properties:", error);

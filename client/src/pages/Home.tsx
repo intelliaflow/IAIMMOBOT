@@ -27,10 +27,13 @@ export function Home() {
       if (searchParams.minPrice) urlParams.append('minPrice', searchParams.minPrice.toString());
       if (searchParams.maxPrice) urlParams.append('maxPrice', searchParams.maxPrice.toString());
       if (searchParams.transactionType) urlParams.append('transactionType', searchParams.transactionType);
-      if (searchParams.surface) urlParams.append('surface', searchParams.surface.toString());
+      if (searchParams.minSurface) urlParams.append('minSurface', searchParams.minSurface.toString());
+      if (searchParams.maxSurface) urlParams.append('maxSurface', searchParams.maxSurface.toString());
 
       const queryString = urlParams.toString();
       const url = `/api/properties${queryString ? `?${queryString}` : ''}`;
+
+      console.log('Fetching properties with URL:', url); // Debug log
 
       const response = await fetch(url);
       if (!response.ok) {
@@ -49,6 +52,7 @@ export function Home() {
   }, [properties]);
 
   const handleSearch = useCallback((params: SearchParams) => {
+    console.log('Search params:', params); // Debug log
     queryClient.setQueryData(['searchParams'], params);
   }, [queryClient]);
 
@@ -75,21 +79,11 @@ export function Home() {
         </div>
       </section>
 
-      {/* Price Heat Map Section */}
-      <section className="py-16 bg-gradient-to-r from-primary/5 to-primary/10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-8">
-            Analyse des prix par zone
-          </h2>
-          {properties && <PriceMap properties={properties} />}
-        </div>
-      </section>
-
       {/* Latest Properties Section */}
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold text-gray-900 mb-8">
-            Dernières annonces
+            {properties.length > 0 ? 'Résultats de votre recherche' : 'Dernières annonces'}
           </h2>
           {isLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -106,6 +100,13 @@ export function Home() {
               {properties.map((property) => (
                 <PropertyCard key={property.id} property={property} />
               ))}
+              {properties.length === 0 && !isLoading && (
+                <div className="col-span-full text-center py-12">
+                  <p className="text-lg text-gray-500">
+                    Aucun bien ne correspond à vos critères de recherche
+                  </p>
+                </div>
+              )}
             </div>
           )}
         </div>

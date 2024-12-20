@@ -19,7 +19,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { LocationSearch } from "./LocationSearch";
-import { SlidersHorizontal, MapPin, Euro, Home, Grid2X2, Square, ChevronDown } from "lucide-react";
+import { MapPin, Euro, Home, Grid2X2, Square, ChevronDown } from "lucide-react";
 
 export interface SearchParams {
   location?: string;
@@ -28,7 +28,8 @@ export interface SearchParams {
   minPrice?: number;
   maxPrice?: number;
   transactionType?: 'sale' | 'rent';
-  surface?: number;
+  minSurface?: number;
+  maxSurface?: number;
 }
 
 interface FilterButtonProps {
@@ -64,11 +65,16 @@ FilterButton.displayName = 'FilterButton';
 
 export function SearchFilters({ transactionType, showTransactionTypeFilter = false, maxPropertyPrice = 1000000, onSearch }: SearchFiltersProps) {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
+
   const [location, setLocation] = useState("");
   const [propertyType, setPropertyType] = useState<string>();
   const [rooms, setRooms] = useState<string>();
   const [selectedTransactionType, setSelectedTransactionType] = useState<'sale' | 'rent' | undefined>(transactionType);
-  const [surface, setSurface] = useState<string>("");
+  const [minSurface, setMinSurface] = useState("");
+  const [maxSurface, setMaxSurface] = useState("");
+  const [priceRange, setPriceRange] = useState([0, 0]);
+  const [isSearching, setIsSearching] = useState(false);
 
   const getDefaultMaxPrice = useCallback(() => {
     if (maxPropertyPrice && maxPropertyPrice > 0) {
@@ -76,10 +82,6 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
     }
     return selectedTransactionType === 'rent' ? 5000 : 1000000;
   }, [selectedTransactionType, maxPropertyPrice]);
-
-  const [priceRange, setPriceRange] = useState([0, getDefaultMaxPrice()]);
-  const [isSearching, setIsSearching] = useState(false);
-  const { toast } = useToast();
 
   useEffect(() => {
     const newMaxPrice = getDefaultMaxPrice();
@@ -117,10 +119,17 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
       searchParams.transactionType = selectedTransactionType || transactionType;
     }
 
-    if (surface) {
-      const surfaceValue = parseInt(surface, 10);
-      if (!isNaN(surfaceValue) && surfaceValue > 0) {
-        searchParams.surface = surfaceValue;
+    if (minSurface) {
+      const minValue = parseInt(minSurface, 10);
+      if (!isNaN(minValue) && minValue > 0) {
+        searchParams.minSurface = minValue;
+      }
+    }
+
+    if (maxSurface) {
+      const maxValue = parseInt(maxSurface, 10);
+      if (!isNaN(maxValue) && maxValue > 0) {
+        searchParams.maxSurface = maxValue;
       }
     }
 
@@ -147,7 +156,7 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
         setIsSearching(false);
       }
     }
-  }, [location, propertyType, rooms, priceRange, selectedTransactionType, surface, transactionType, getDefaultMaxPrice, onSearch, queryClient, toast]);
+  }, [location, propertyType, rooms, priceRange, selectedTransactionType, minSurface, maxSurface, transactionType, getDefaultMaxPrice, onSearch, queryClient, toast]);
 
   const handleReset = useCallback(() => {
     setLocation("");
@@ -155,7 +164,8 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
     setRooms(undefined);
     setPriceRange([0, getDefaultMaxPrice()]);
     setSelectedTransactionType(transactionType);
-    setSurface("");
+    setMinSurface("");
+    setMaxSurface("");
 
     if (onSearch) {
       const resetParams: SearchParams = {};
@@ -166,23 +176,26 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
     }
   }, [getDefaultMaxPrice, onSearch, transactionType]);
 
-  const handleSurfaceChange = (value: string) => {
-    // N'accepte que les chiffres
+  const handleSurfaceChange = (value: string, type: 'min' | 'max') => {
     const numericValue = value.replace(/[^0-9]/g, '');
-    setSurface(numericValue);
+    if (type === 'min') {
+      setMinSurface(numericValue);
+    } else {
+      setMaxSurface(numericValue);
+    }
   };
 
   return (
     <div className="w-full space-y-4">
       {/* First row - Main filters */}
-      <form onSubmit={handleSearch} className="hidden md:flex gap-2 items-center">
+      <div className="hidden md:flex gap-2 items-center">
         <Popover>
           <PopoverTrigger asChild>
             <div>
               <FilterButton
                 icon={MapPin}
                 label="Localisation"
-                value={location || "Toutes"}
+                value={location || undefined}
               />
             </div>
           </PopoverTrigger>
@@ -234,22 +247,40 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
               <FilterButton
                 icon={Square}
                 label="Surface"
-                value={surface ? `${surface} m²` : undefined}
+                value={minSurface || maxSurface ? `${minSurface || 0} - ${maxSurface || "∞"} m²` : undefined}
               />
             </div>
           </PopoverTrigger>
-          <PopoverContent className="w-[200px] p-4">
-            <div className="space-y-2">
-              <Label>Surface minimale</Label>
-              <div className="flex items-center space-x-2">
-                <Input
-                  type="text"
-                  value={surface}
-                  onChange={(e) => handleSurfaceChange(e.target.value)}
-                  placeholder="0"
-                  className="w-full"
-                />
-                <span className="text-sm text-muted-foreground">m²</span>
+          <PopoverContent className="w-[300px] p-4">
+            <div className="space-y-4">
+              <Label>Surface habitable</Label>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Min</Label>
+                  <div className="flex items-center space-x-2">
+                    <Input
+                      type="text"
+                      value={minSurface}
+                      onChange={(e) => handleSurfaceChange(e.target.value, 'min')}
+                      placeholder="0"
+                      className="w-full"
+                    />
+                    <span className="text-sm text-muted-foreground">m²</span>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Max</Label>
+                  <div className="flex items-center space-x-2">
+                    <Input
+                      type="text"
+                      value={maxSurface}
+                      onChange={(e) => handleSurfaceChange(e.target.value, 'max')}
+                      placeholder="0"
+                      className="w-full"
+                    />
+                    <span className="text-sm text-muted-foreground">m²</span>
+                  </div>
+                </div>
               </div>
             </div>
           </PopoverContent>
@@ -304,46 +335,10 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
             </Select>
           </PopoverContent>
         </Popover>
-      </form>
+      </div>
 
-      {/* Second row - Action buttons and more criteria */}
+      {/* Second row - Action buttons */}
       <div className="hidden md:flex justify-center gap-4 items-center">
-        <Popover>
-          <PopoverTrigger asChild>
-            <div>
-              <FilterButton
-                icon={SlidersHorizontal}
-                label="+ de critères"
-              />
-            </div>
-          </PopoverTrigger>
-          <PopoverContent className="w-[300px] p-4">
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>Type de transaction</Label>
-                <div className="grid grid-cols-2 gap-2">
-                  <Button
-                    type="button"
-                    variant={selectedTransactionType === 'sale' ? "default" : "outline"}
-                    className="w-full"
-                    onClick={() => setSelectedTransactionType('sale')}
-                  >
-                    Vente
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={selectedTransactionType === 'rent' ? "default" : "outline"}
-                    className="w-full"
-                    onClick={() => setSelectedTransactionType('rent')}
-                  >
-                    Location
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </PopoverContent>
-        </Popover>
-
         <Button 
           onClick={handleSearch}
           className="px-8"
@@ -361,20 +356,19 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
         </Button>
       </div>
 
-      {/* Version Mobile */}
+      {/* Mobile version */}
       <div className="md:hidden">
         <Sheet>
           <SheetTrigger asChild>
-            <Button variant="outline" className="w-full">
-              <SlidersHorizontal className="h-4 w-4 mr-2" />
-              Filtrer
+            <Button variant="outline" className="w-full flex items-center gap-2">
+              <span>Filtrer</span>
             </Button>
           </SheetTrigger>
           <SheetContent side="bottom" className="h-[90vh]">
             <SheetHeader>
-              <SheetTitle>Filtrer les biens</SheetTitle>
+              <SheetTitle>Filtres</SheetTitle>
             </SheetHeader>
-            <form onSubmit={handleSearch} className="mt-6 space-y-6">
+            <div className="mt-6 space-y-6">
               <LocationSearch
                 value={location}
                 onChange={setLocation}
@@ -382,34 +376,26 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
               />
 
               <div className="space-y-4">
-                <Label>Type de transaction</Label>
-                <div className="grid grid-cols-2 gap-2">
-                  <Button
-                    type="button"
-                    variant={selectedTransactionType === 'sale' ? "default" : "outline"}
-                    className="w-full"
-                    onClick={() => setSelectedTransactionType('sale')}
-                  >
-                    Vente
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={selectedTransactionType === 'rent' ? "default" : "outline"}
-                    className="w-full"
-                    onClick={() => setSelectedTransactionType('rent')}
-                  >
-                    Location
-                  </Button>
-                </div>
-              </div>
-
-              <div className="space-y-4">
                 <Label>Surface minimale</Label>
                 <div className="flex items-center space-x-2">
                   <Input
                     type="text"
-                    value={surface}
-                    onChange={(e) => handleSurfaceChange(e.target.value)}
+                    value={minSurface}
+                    onChange={(e) => handleSurfaceChange(e.target.value, 'min')}
+                    placeholder="0"
+                    className="w-full"
+                  />
+                  <span className="text-sm text-muted-foreground">m²</span>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <Label>Surface maximale</Label>
+                <div className="flex items-center space-x-2">
+                  <Input
+                    type="text"
+                    value={maxSurface}
+                    onChange={(e) => handleSurfaceChange(e.target.value, 'max')}
                     placeholder="0"
                     className="w-full"
                   />
@@ -419,22 +405,21 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
 
               <div className="grid grid-cols-2 gap-4">
                 <Button 
-                  type="submit" 
+                  onClick={handleSearch}
                   className="w-full"
                   disabled={isSearching}
                 >
                   {isSearching ? "Recherche..." : "Rechercher"}
                 </Button>
                 <Button
-                  type="button"
                   variant="outline"
-                  className="w-full"
                   onClick={handleReset}
+                  className="w-full"
                 >
                   Réinitialiser
                 </Button>
               </div>
-            </form>
+            </div>
           </SheetContent>
         </Sheet>
       </div>
