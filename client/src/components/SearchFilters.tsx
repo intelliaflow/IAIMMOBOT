@@ -119,18 +119,14 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
       searchParams.transactionType = selectedTransactionType || transactionType;
     }
 
-    if (minSurface) {
-      const minValue = Number(minSurface);
-      if (!isNaN(minValue) && minValue > 0) {
-        searchParams.minSurface = minValue;
-      }
+    const minSurfaceValue = Number(minSurface);
+    if (minSurface && !isNaN(minSurfaceValue) && minSurfaceValue > 0) {
+      searchParams.minSurface = minSurfaceValue;
     }
 
-    if (maxSurface) {
-      const maxValue = Number(maxSurface);
-      if (!isNaN(maxValue) && maxValue > 0) {
-        searchParams.maxSurface = maxValue;
-      }
+    const maxSurfaceValue = Number(maxSurface);
+    if (maxSurface && !isNaN(maxSurfaceValue) && maxSurfaceValue > 0) {
+      searchParams.maxSurface = maxSurfaceValue;
     }
 
     if (onSearch) {
