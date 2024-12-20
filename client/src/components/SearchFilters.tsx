@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, memo } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import {
@@ -67,7 +68,7 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
   const [propertyType, setPropertyType] = useState<string>();
   const [rooms, setRooms] = useState<string>();
   const [selectedTransactionType, setSelectedTransactionType] = useState<'sale' | 'rent' | undefined>(transactionType);
-  const [surface, setSurface] = useState<string>();
+  const [surface, setSurface] = useState<string>("");
 
   const getDefaultMaxPrice = useCallback(() => {
     if (maxPropertyPrice && maxPropertyPrice > 0) {
@@ -117,9 +118,9 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
     }
 
     if (surface) {
-      const surfaceNumber = parseInt(surface, 10);
-      if (!isNaN(surfaceNumber)) {
-        searchParams.surface = surfaceNumber;
+      const surfaceValue = parseInt(surface, 10);
+      if (!isNaN(surfaceValue) && surfaceValue > 0) {
+        searchParams.surface = surfaceValue;
       }
     }
 
@@ -132,7 +133,7 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
         ]);
 
         toast({
-          title: "Recherche effectuée",
+          title: "Succès",
           description: "Les résultats ont été mis à jour",
         });
       } catch (error) {
@@ -154,7 +155,7 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
     setRooms(undefined);
     setPriceRange([0, getDefaultMaxPrice()]);
     setSelectedTransactionType(transactionType);
-    setSurface(undefined);
+    setSurface("");
 
     if (onSearch) {
       const resetParams: SearchParams = {};
@@ -164,6 +165,12 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
       onSearch(resetParams);
     }
   }, [getDefaultMaxPrice, onSearch, transactionType]);
+
+  const handleSurfaceChange = (value: string) => {
+    // N'accepte que les chiffres
+    const numericValue = value.replace(/[^0-9]/g, '');
+    setSurface(numericValue);
+  };
 
   return (
     <div className="w-full space-y-4">
@@ -231,23 +238,20 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
               />
             </div>
           </PopoverTrigger>
-          <PopoverContent className="w-[200px] p-2">
-            <Select value={surface} onValueChange={setSurface}>
-              <SelectTrigger>
-                <SelectValue placeholder="Surface minimum" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="20">20 m²</SelectItem>
-                <SelectItem value="30">30 m²</SelectItem>
-                <SelectItem value="40">40 m²</SelectItem>
-                <SelectItem value="50">50 m²</SelectItem>
-                <SelectItem value="60">60 m²</SelectItem>
-                <SelectItem value="70">70 m²</SelectItem>
-                <SelectItem value="80">80 m²</SelectItem>
-                <SelectItem value="90">90 m²</SelectItem>
-                <SelectItem value="100">100 m²</SelectItem>
-              </SelectContent>
-            </Select>
+          <PopoverContent className="w-[200px] p-4">
+            <div className="space-y-2">
+              <Label>Surface minimale</Label>
+              <div className="flex items-center space-x-2">
+                <Input
+                  type="text"
+                  value={surface}
+                  onChange={(e) => handleSurfaceChange(e.target.value)}
+                  placeholder="0"
+                  className="w-full"
+                />
+                <span className="text-sm text-muted-foreground">m²</span>
+              </div>
+            </div>
           </PopoverContent>
         </Popover>
 
@@ -357,7 +361,6 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
         </Button>
       </div>
 
-
       {/* Version Mobile */}
       <div className="md:hidden">
         <Sheet>
@@ -401,23 +404,17 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
               </div>
 
               <div className="space-y-4">
-                <Label>Surface</Label>
-                <Select value={surface} onValueChange={setSurface}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Surface" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="20">20 m²</SelectItem>
-                    <SelectItem value="30">30 m²</SelectItem>
-                    <SelectItem value="40">40 m²</SelectItem>
-                    <SelectItem value="50">50 m²</SelectItem>
-                    <SelectItem value="60">60 m²</SelectItem>
-                    <SelectItem value="70">70 m²</SelectItem>
-                    <SelectItem value="80">80 m²</SelectItem>
-                    <SelectItem value="90">90 m²</SelectItem>
-                    <SelectItem value="100">100 m²</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Label>Surface minimale</Label>
+                <div className="flex items-center space-x-2">
+                  <Input
+                    type="text"
+                    value={surface}
+                    onChange={(e) => handleSurfaceChange(e.target.value)}
+                    placeholder="0"
+                    className="w-full"
+                  />
+                  <span className="text-sm text-muted-foreground">m²</span>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
