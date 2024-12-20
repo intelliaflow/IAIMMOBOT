@@ -95,6 +95,21 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
 
     const searchParams: SearchParams = {};
 
+    // Ensure surface values are properly included
+    if (minSurface) {
+      const minSurfaceValue = parseInt(minSurface);
+      if (!isNaN(minSurfaceValue)) {
+        searchParams.minSurface = minSurfaceValue;
+      }
+    }
+
+    if (maxSurface) {
+      const maxSurfaceValue = parseInt(maxSurface);
+      if (!isNaN(maxSurfaceValue)) {
+        searchParams.maxSurface = maxSurfaceValue;
+      }
+    }
+
     if (location?.trim()) {
       searchParams.location = location.trim();
     }
@@ -182,16 +197,13 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
   const handleSurfaceChange = (value: string, type: 'min' | 'max') => {
     const numericValue = value.replace(/[^0-9]/g, '');
     if (type === 'min') {
-      setTempMinSurface(numericValue);
+      setMinSurface(numericValue);
     } else {
-      setTempMaxSurface(numericValue);
+      setMaxSurface(numericValue);
     }
   };
 
   const handleSurfaceApply = () => {
-    setMinSurface(tempMinSurface);
-    setMaxSurface(tempMaxSurface);
-    handleSearch();
     closePopover();
   };
 
