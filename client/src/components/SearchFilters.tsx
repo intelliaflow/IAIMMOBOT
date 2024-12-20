@@ -160,17 +160,26 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
 
   // Reset des filtres
   const handleReset = useCallback(() => {
+    // Réinitialisation des valeurs principales
     setLocation("");
     setPropertyType(undefined);
     setRooms(undefined);
     setPriceRange([0, maxPropertyPrice]);
     setSelectedTransactionType(transactionType);
+    
+    // Réinitialisation des surfaces
     setMinSurface("");
     setMaxSurface("");
     setTempMinSurface("");
     setTempMaxSurface("");
+    
+    // Réinitialisation des prix
     setTempPriceRange([0, maxPropertyPrice]);
-  }, [maxPropertyPrice, transactionType]);
+    setPriceRange([0, maxPropertyPrice]);
+    
+    // Force la mise à jour de l'interface
+    queryClient.setQueryData(['searchParams'], {});
+  }, [maxPropertyPrice, transactionType, queryClient]);
 
   const debouncedSearch = useCallback(
     debounce(() => {
