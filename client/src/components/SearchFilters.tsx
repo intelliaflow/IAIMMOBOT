@@ -120,14 +120,14 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
     }
 
     if (minSurface) {
-      const minValue = parseInt(minSurface, 10);
+      const minValue = Number(minSurface);
       if (!isNaN(minValue) && minValue > 0) {
         searchParams.minSurface = minValue;
       }
     }
 
     if (maxSurface) {
-      const maxValue = parseInt(maxSurface, 10);
+      const maxValue = Number(maxSurface);
       if (!isNaN(maxValue) && maxValue > 0) {
         searchParams.maxSurface = maxValue;
       }
@@ -333,6 +333,35 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
                 <SelectItem value="5">5 pièces et +</SelectItem>
               </SelectContent>
             </Select>
+          </PopoverContent>
+        </Popover>
+
+        <Popover>
+          <PopoverTrigger asChild>
+            <div>
+              <Button variant="outline" className="h-10 px-4 py-2 flex items-center gap-2 bg-white">
+                Plus de critères
+                <ChevronDown className="h-4 w-4 ml-1" />
+              </Button>
+            </div>
+          </PopoverTrigger>
+          <PopoverContent className="w-[300px] p-4">
+            <div className="space-y-4">
+              {showTransactionTypeFilter && (
+                <div className="space-y-2">
+                  <Label>Type de transaction</Label>
+                  <Select value={selectedTransactionType} onValueChange={setSelectedTransactionType}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Type de transaction" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="sale">Vente</SelectItem>
+                      <SelectItem value="rent">Location</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </div>
           </PopoverContent>
         </Popover>
       </div>
