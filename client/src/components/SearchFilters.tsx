@@ -183,7 +183,6 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
     } else {
       setMaxSurface(numericValue);
     }
-    handleSearch();
   };
 
   return (
@@ -293,10 +292,31 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
                 </div>
               </div>
               <div className="flex justify-end space-x-2 mt-4">
-                <Button variant="outline" onClick={() => { setMinSurface(""); setMaxSurface(""); }}>
+                <Button variant="outline" onClick={(e) => { 
+                  e.preventDefault();
+                  setMinSurface(""); 
+                  setMaxSurface("");
+                  const popover = document.querySelector('[data-state="open"]');
+                  if (popover) {
+                    const closeButton = popover.querySelector('[aria-label="Close"]');
+                    if (closeButton) {
+                      (closeButton as HTMLElement).click();
+                    }
+                  }
+                }}>
                   Annuler
                 </Button>
-                <Button onClick={() => { handleSearch(); }}>
+                <Button onClick={(e) => { 
+                  e.preventDefault();
+                  handleSearch();
+                  const popover = document.querySelector('[data-state="open"]');
+                  if (popover) {
+                    const closeButton = popover.querySelector('[aria-label="Close"]');
+                    if (closeButton) {
+                      (closeButton as HTMLElement).click();
+                    }
+                  }
+                }}>
                   Appliquer
                 </Button>
               </div>
