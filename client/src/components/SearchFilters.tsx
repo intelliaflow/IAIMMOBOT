@@ -176,31 +176,32 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
     }
   }, [getDefaultMaxPrice, onSearch, transactionType]);
 
+  const [tempMinSurface, setTempMinSurface] = useState("");
+  const [tempMaxSurface, setTempMaxSurface] = useState("");
+
   const handleSurfaceChange = (value: string, type: 'min' | 'max') => {
     const numericValue = value.replace(/[^0-9]/g, '');
     if (type === 'min') {
-      setMinSurface(numericValue);
-      handleSearch();
+      setTempMinSurface(numericValue);
     } else {
-      setMaxSurface(numericValue);
-      handleSearch();
+      setTempMaxSurface(numericValue);
     }
   };
 
   const handleSurfaceApply = () => {
+    setMinSurface(tempMinSurface);
+    setMaxSurface(tempMaxSurface);
     handleSearch();
-    const popover = document.querySelector('[data-state="open"]');
-    if (popover) {
-      const closeButton = popover.querySelector('[aria-label="Close"]');
-      if (closeButton) {
-        (closeButton as HTMLElement).click();
-      }
-    }
+    closePopover();
   };
 
   const handleSurfaceCancel = () => {
-    setMinSurface("");
-    setMaxSurface("");
+    setTempMinSurface(minSurface);
+    setTempMaxSurface(maxSurface);
+    closePopover();
+  };
+
+  const closePopover = () => {
     const popover = document.querySelector('[data-state="open"]');
     if (popover) {
       const closeButton = popover.querySelector('[aria-label="Close"]');
@@ -294,7 +295,7 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
                   <div className="flex items-center space-x-2">
                     <Input
                       type="text"
-                      value={minSurface}
+                      value={tempMinSurface}
                       onChange={(e) => handleSurfaceChange(e.target.value, 'min')}
                       placeholder="0"
                       className="w-full"
@@ -307,7 +308,7 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
                   <div className="flex items-center space-x-2">
                     <Input
                       type="text"
-                      value={maxSurface}
+                      value={tempMaxSurface}
                       onChange={(e) => handleSurfaceChange(e.target.value, 'max')}
                       placeholder="0"
                       className="w-full"
