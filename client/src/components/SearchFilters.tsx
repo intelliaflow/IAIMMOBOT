@@ -229,6 +229,7 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
           </PopoverTrigger>
           <PopoverContent className="w-[300px] p-4">
             <div className="space-y-4">
+              <Label>Budget</Label>
               <Slider
                 defaultValue={[0, getDefaultMaxPrice()]}
                 max={getDefaultMaxPrice()}
@@ -238,6 +239,14 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
                 className="mt-6"
                 minStepsBetweenThumbs={5000}
               />
+              <div className="flex justify-end space-x-2 mt-4">
+                <Button variant="outline" onClick={() => setPriceRange([0, getDefaultMaxPrice()])}>
+                  Annuler
+                </Button>
+                <Button onClick={() => { handleSearch(); }}>
+                  Appliquer
+                </Button>
+              </div>
             </div>
           </PopoverContent>
         </Popover>
@@ -282,6 +291,14 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
                     <span className="text-sm text-muted-foreground">m²</span>
                   </div>
                 </div>
+              </div>
+              <div className="flex justify-end space-x-2 mt-4">
+                <Button variant="outline" onClick={() => { setMinSurface(""); setMaxSurface(""); }}>
+                  Annuler
+                </Button>
+                <Button onClick={() => { handleSearch(); }}>
+                  Appliquer
+                </Button>
               </div>
             </div>
           </PopoverContent>
