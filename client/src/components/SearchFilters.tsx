@@ -181,6 +181,29 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
     }
   };
 
+  const handleSurfaceApply = () => {
+    handleSearch();
+    const popover = document.querySelector('[data-state="open"]');
+    if (popover) {
+      const closeButton = popover.querySelector('[aria-label="Close"]');
+      if (closeButton) {
+        (closeButton as HTMLElement).click();
+      }
+    }
+  };
+
+  const handleSurfaceCancel = () => {
+    setMinSurface("");
+    setMaxSurface("");
+    const popover = document.querySelector('[data-state="open"]');
+    if (popover) {
+      const closeButton = popover.querySelector('[aria-label="Close"]');
+      if (closeButton) {
+        (closeButton as HTMLElement).click();
+      }
+    }
+  };
+
   return (
     <div className="w-full space-y-4">
       {/* First row - Main filters */}
@@ -288,31 +311,10 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
                 </div>
               </div>
               <div className="flex justify-end space-x-2 mt-4">
-                <Button variant="outline" onClick={(e) => { 
-                  e.preventDefault();
-                  setMinSurface(""); 
-                  setMaxSurface("");
-                  const popover = document.querySelector('[data-state="open"]');
-                  if (popover) {
-                    const closeButton = popover.querySelector('[aria-label="Close"]');
-                    if (closeButton) {
-                      (closeButton as HTMLElement).click();
-                    }
-                  }
-                }}>
+                <Button variant="outline" onClick={handleSurfaceCancel}>
                   Annuler
                 </Button>
-                <Button onClick={(e) => { 
-                  e.preventDefault();
-                  handleSearch();
-                  const popover = document.querySelector('[data-state="open"]');
-                  if (popover) {
-                    const closeButton = popover.querySelector('[aria-label="Close"]');
-                    if (closeButton) {
-                      (closeButton as HTMLElement).click();
-                    }
-                  }
-                }}>
+                <Button onClick={handleSurfaceApply}>
                   Appliquer
                 </Button>
               </div>
