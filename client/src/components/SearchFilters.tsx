@@ -195,11 +195,12 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
   const [tempMaxSurface, setTempMaxSurface] = useState("");
 
   const handleSurfaceChange = (value: string, type: 'min' | 'max') => {
-    const numericValue = value.replace(/[^0-9]/g, '');
     if (type === 'min') {
-      setMinSurface(numericValue);
+      setTempMinSurface(value);
+      setMinSurface(value);
     } else {
-      setMaxSurface(numericValue);
+      setTempMaxSurface(value);
+      setMaxSurface(value);
     }
   };
 
