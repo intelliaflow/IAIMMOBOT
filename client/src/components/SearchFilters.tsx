@@ -201,6 +201,43 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
           </PopoverContent>
         </Popover>
 
+        {showTransactionTypeFilter && (
+          <Select value={selectedTransactionType} onValueChange={(value: 'sale' | 'rent') => setSelectedTransactionType(value)}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Type de transaction" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="sale">Vente</SelectItem>
+              <SelectItem value="rent">Location</SelectItem>
+            </SelectContent>
+          </Select>
+        )}
+
+        <Select value={propertyType} onValueChange={setPropertyType}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Type de bien" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="house">Maison</SelectItem>
+            <SelectItem value="apartment">Appartement</SelectItem>
+            <SelectItem value="land">Terrain</SelectItem>
+            <SelectItem value="commercial">Local commercial</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select value={rooms} onValueChange={setRooms}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Nombre de pièces" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="1">1 pièce</SelectItem>
+            <SelectItem value="2">2 pièces</SelectItem>
+            <SelectItem value="3">3 pièces</SelectItem>
+            <SelectItem value="4">4 pièces</SelectItem>
+            <SelectItem value="5">5 pièces et +</SelectItem>
+          </SelectContent>
+        </Select>
+
         <Popover>
           <PopoverTrigger asChild>
             <div>
