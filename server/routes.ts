@@ -83,7 +83,8 @@ export function registerRoutes(app: Express): Server {
         .select()
         .from(properties)
         .where(conditions.length > 0 ? and(...conditions) : undefined)
-        .orderBy(desc(properties.createdAt));
+        .orderBy(desc(properties.createdAt))
+        .limit(50); // Limitation pour de meilleures performances
 
       console.log(`Found ${filteredProperties.length} properties`); // Debug log
       return res.json(filteredProperties);
@@ -135,7 +136,8 @@ export function registerRoutes(app: Express): Server {
         .select()
         .from(properties)
         .where(and(...conditions))
-        .orderBy(desc(properties.createdAt));
+        .orderBy(desc(properties.createdAt))
+        .limit(50);
       
       return res.json(filteredProperties);
     } catch (error) {
@@ -187,7 +189,8 @@ export function registerRoutes(app: Express): Server {
         .select()
         .from(properties)
         .where(and(...conditions))
-        .orderBy(desc(properties.createdAt));
+        .orderBy(desc(properties.createdAt))
+        .limit(50);
       
       return res.json(filteredProperties);
     } catch (error) {
