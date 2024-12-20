@@ -119,14 +119,18 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
       searchParams.transactionType = selectedTransactionType || transactionType;
     }
 
-    const minSurfaceValue = parseInt(minSurface);
-    if (!isNaN(minSurfaceValue) && minSurfaceValue > 0) {
-      searchParams.minSurface = minSurfaceValue;
+    if (minSurface) {
+      const minSurfaceValue = parseInt(minSurface);
+      if (!isNaN(minSurfaceValue)) {
+        searchParams.minSurface = minSurfaceValue;
+      }
     }
 
-    const maxSurfaceValue = parseInt(maxSurface);
-    if (!isNaN(maxSurfaceValue) && maxSurfaceValue > 0) {
-      searchParams.maxSurface = maxSurfaceValue;
+    if (maxSurface) {
+      const maxSurfaceValue = parseInt(maxSurface);
+      if (!isNaN(maxSurfaceValue)) {
+        searchParams.maxSurface = maxSurfaceValue;
+      }
     }
 
     if (onSearch) {
@@ -173,15 +177,13 @@ export function SearchFilters({ transactionType, showTransactionTypeFilter = fal
   }, [getDefaultMaxPrice, onSearch, transactionType]);
 
   const handleSurfaceChange = (value: string, type: 'min' | 'max') => {
-    // Remove non-numeric characters except decimal point
-    const numericValue = value.replace(/[^\d.]/g, '');
-    // Ensure only one decimal point
-    const formattedValue = numericValue.replace(/(\..*)\./g, '$1');
-    
+    const numericValue = value.replace(/[^0-9]/g, '');
     if (type === 'min') {
-      setMinSurface(formattedValue);
+      setMinSurface(numericValue);
+      handleSearch();
     } else {
-      setMaxSurface(formattedValue);
+      setMaxSurface(numericValue);
+      handleSearch();
     }
   };
 
